@@ -29,8 +29,13 @@ testcase6 = '1T2D3D#'
 testcase7 = '1D2S3T*'
 
 
-print(solution(*testcase1))
-print(solution(*testcase2))
+print(solution(testcase1))
+print(solution(testcase2))
+print(solution(testcase3))
+print(solution(testcase4))
+print(solution(testcase5))
+print(solution(testcase6))
+print(solution(testcase7))
 
 
 
