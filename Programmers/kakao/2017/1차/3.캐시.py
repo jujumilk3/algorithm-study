@@ -18,12 +18,12 @@ def solution(cache_size, cities):
     return time
 
 
-testcase1 = (3, ['Jeju', 'Pangyo', 'Seoul', 'NewYork', 'LA', 'Jeju', 'Pangyo', 'Seoul', 'NewYork', 'LA'])
-testcase2 = (3, ['Jeju', 'Pangyo', 'Seoul', 'Jeju', 'Pangyo', 'Seoul', 'Jeju', 'Pangyo', 'Seoul'])
-testcase3 = (2, ['Jeju', 'Pangyo', 'Seoul', 'NewYork', 'LA', 'SanFrancisco', 'Seoul', 'Rome', 'Paris', 'Jeju', 'NewYork', 'Rome'])
-testcase4 = (5, ['Jeju', 'Pangyo', 'Seoul', 'NewYork', 'LA', 'SanFrancisco', 'Seoul', 'Rome', 'Paris', 'Jeju', 'NewYork', 'Rome'])
-testcase5 = (2, ['Jeju', 'Pangyo', 'NewYork', 'newyork'])
-testcase6 = (0, ['Jeju', 'Pangyo', 'Seoul', 'NewYork', 'LA'])
+testcase1 = [3, ['Jeju', 'Pangyo', 'Seoul', 'NewYork', 'LA', 'Jeju', 'Pangyo', 'Seoul', 'NewYork', 'LA']]
+testcase2 = [3, ['Jeju', 'Pangyo', 'Seoul', 'Jeju', 'Pangyo', 'Seoul', 'Jeju', 'Pangyo', 'Seoul']]
+testcase3 = [2, ['Jeju', 'Pangyo', 'Seoul', 'NewYork', 'LA', 'SanFrancisco', 'Seoul', 'Rome', 'Paris', 'Jeju', 'NewYork', 'Rome']]
+testcase4 = [5, ['Jeju', 'Pangyo', 'Seoul', 'NewYork', 'LA', 'SanFrancisco', 'Seoul', 'Rome', 'Paris', 'Jeju', 'NewYork', 'Rome']]
+testcase5 = [2, ['Jeju', 'Pangyo', 'NewYork', 'newyork']]
+testcase6 = [0, ['Jeju', 'Pangyo', 'Seoul', 'NewYork', 'LA']]
 
 print(solution(*testcase1))
 print(solution(*testcase2))
