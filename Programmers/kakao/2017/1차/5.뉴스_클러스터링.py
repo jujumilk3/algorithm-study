@@ -11,11 +11,14 @@ def solution(str1, str2):
 
     for i in range(len(str1list)-1):
         temp_list = [str1list[i], str1list[i+1]]
-        print(temp_list)
+        str1_set_list.append(temp_list)
 
     for i in range(len(str2list) - 1):
         temp_list = [str2list[i], str2list[i + 1]]
-        print(temp_list)
+        str2_set_list.append(temp_list)
+
+    print(str1_set_list)
+    print(str2_set_list)
 
     return answer
 
