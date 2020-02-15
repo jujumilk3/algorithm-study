@@ -1,6 +1,3 @@
-
-import sys
-
 S = input().strip()
 
 try:
