@@ -1,6 +1,13 @@
 def solution(n, m):
-    answer = []
-    return answer
+    lcm = n * m
+    mod = n % m
+    while mod > 0:
+        n = m
+        m = mod
+        mod = n % m
+    gcd = m
+    lcm = lcm // gcd
+    return [gcd, lcm]
 
 
 print(solution(3, 12))

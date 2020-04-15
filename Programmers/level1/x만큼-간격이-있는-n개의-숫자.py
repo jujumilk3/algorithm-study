@@ -2,7 +2,6 @@ def solution(x, n):
     answer = []
     for i in range(1, n + 1):
         answer.append(x * i)
-    print([x for x in range(10)])
     return answer
 
 
