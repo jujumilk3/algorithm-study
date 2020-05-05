@@ -23,16 +23,10 @@ def solution(str1, str2):
     return answer
 
 
-testcase1 = ['FRANCE', 'french']
-testcase2 = ['handshake', 'shake hands']
-testcase3 = ['aa1+aa2', 'AAAA12']
-testcase4 = ['E=M*C^2', 'e=m*c^2']
-
-
-print(solution(*testcase1))
-print(solution(*testcase2))
-print(solution(*testcase3))
-print(solution(*testcase4))
+print(solution('FRANCE', 'french'))
+print(solution('handshake', 'shake hands'))
+print(solution('aa1+aa2', 'AAAA12'))
+print(solution('E=M*C^2', 'e=m*c^2'))
 
 
 # strategy

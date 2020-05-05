@@ -1,12 +1,14 @@
 def solution(skill, skill_trees):
-    for tree in skill_trees:
-        temp_skill = skill
-        for skill_in_tree in tree:
-            if skill_in_tree == temp_skill[0]:
-                print('일치')
-            else:
-                print('불일치')
     answer = 0
+    for tree in skill_trees:
+        current_tree_skill = [char for char in tree if char in skill]
+        possibility = True
+        for i, j in zip(current_tree_skill, skill):
+            if i != j:
+                possibility = False
+                break
+        if possibility:
+            answer += 1
     return answer
 
 

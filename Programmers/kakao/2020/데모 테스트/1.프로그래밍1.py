@@ -16,8 +16,5 @@ def solution(v):
     return answer
 
 
-testcase1 = [[1, 4], [3, 4], [3, 10]]
-testcase2 = [[1, 1], [2, 2], [1, 2]]
-
-print(solution(testcase1))
-print(solution(testcase2))
+print(solution([[1, 4], [3, 4], [3, 10]]))
+print(solution([[1, 1], [2, 2], [1, 2]]))
