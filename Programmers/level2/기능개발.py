@@ -9,18 +9,16 @@ def solution(progresses, speeds):
             if progress > 99:
                 break
         day_to_take_list.append(day_to_take)
-    print(day_to_take_list)
     current_day_to_take = day_to_take_list[0]
-    count_day = 1
+    release_method = 1
     for i in range(1, len(day_to_take_list)):
-        print(day_to_take_list[i])
-        if current_day_to_take > day_to_take_list[i]:
-            count_day += 1
+        if current_day_to_take >= day_to_take_list[i]:
+            release_method += 1
         else:
             current_day_to_take = day_to_take_list[i]
-            answer.append(count_day)
-            count_day = 1
-    answer.append(count_day)
+            answer.append(release_method)
+            release_method = 1
+    answer.append(release_method)
     return answer
 
 
