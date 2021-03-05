@@ -1,113 +1,45 @@
-<h4>[프로그래머스/Level1/파이썬3(python3)] 신규 아이디 추천</h4>
+<h4>[프로그래머스/Level1/파이썬3(python3)] 폰켓몬</h4>
 <h4>문제</h4>
-<p>카카오에 입사한 신입 개발자 <code class="inline">네오</code>는 &quot;카카오계정개발팀&quot;에 배치되어, 카카오 서비스에 가입하는 유저들의 아이디를 생성하는 업무를 담당하게 되었습니다. &quot;네오&quot;에게 주어진 첫 업무는 새로 가입하는 유저들이 카카오 아이디 규칙에 맞지 않는 아이디를 입력했을 때, 입력된 아이디와 유사하면서 규칙에 맞는 아이디를 추천해주는 프로그램을 개발하는 것입니다.
-다음은 카카오 아이디의 규칙입니다.</p>
-<ul>
-<li>아이디의 길이는 3자 이상 15자 이하여야 합니다.</li>
-<li>아이디는 알파벳 소문자, 숫자, 빼기(<code class="inline">-</code>), 밑줄(<code class="inline">_</code>), 마침표(<code class="inline">.</code>) 문자만 사용할 수 있습니다.</li>
-<li>단, 마침표(<code class="inline">.</code>)는 처음과 끝에 사용할 수 없으며 또한 연속으로 사용할 수 없습니다.</li>
+<p>당신은 폰켓몬을 잡기 위한 오랜 여행 끝에, 홍 박사님의 연구실에 도착했습니다. 홍 박사님은 당신에게 자신의 연구실에 있는 총 N 마리의 폰켓몬 중에서 N/2마리를 가져가도 좋다고 했습니다.
+홍 박사님 연구실의 폰켓몬은 종류에 따라 번호를 붙여 구분합니다. 따라서 같은 종류의 폰켓몬은 같은 번호를 가지고 있습니다. 예를 들어 연구실에 총 4마리의 폰켓몬이 있고, 각 폰켓몬의 종류 번호가 [3번, 1번, 2번, 3번]이라면 이는 3번 폰켓몬 두 마리, 1번 폰켓몬 한 마리, 2번 폰켓몬 한 마리가 있음을 나타냅니다. 이때, 4마리의 폰켓몬 중 2마리를 고르는 방법은 다음과 같이 6가지가 있습니다.</p>
+<ol>
+<li>첫 번째(3번), 두 번째(1번) 폰켓몬을 선택</li>
+<li>첫 번째(3번), 세 번째(2번) 폰켓몬을 선택</li>
+<li>첫 번째(3번), 네 번째(3번) 폰켓몬을 선택</li>
+<li>두 번째(1번), 세 번째(2번) 폰켓몬을 선택</li>
+<li>두 번째(1번), 네 번째(3번) 폰켓몬을 선택</li>
+<li>세 번째(2번), 네 번째(3번) 폰켓몬을 선택</li>
 
-</ul>
-<p>&quot;네오&quot;는 다음과 같이 7단계의 순차적인 처리 과정을 통해 신규 유저가 입력한 아이디가 카카오 아이디 규칙에 맞는 지 검사하고 규칙에 맞지 않은 경우 규칙에 맞는 새로운 아이디를 추천해 주려고 합니다.
-신규 유저가 입력한 아이디가 <code class="inline">new_id</code> 라고 한다면,</p>
-<pre><code class="inline">1단계 new_id의 모든 대문자를 대응되는 소문자로 치환합니다.
-2단계 new_id에서 알파벳 소문자, 숫자, 빼기(-), 밑줄(_), 마침표(.)를 제외한 모든 문자를 제거합니다.
-3단계 new_id에서 마침표(.)가 2번 이상 연속된 부분을 하나의 마침표(.)로 치환합니다.
-4단계 new_id에서 마침표(.)가 처음이나 끝에 위치한다면 제거합니다.
-5단계 new_id가 빈 문자열이라면, new_id에 &quot;a&quot;를 대입합니다.
-6단계 new_id의 길이가 16자 이상이면, new_id의 첫 15개의 문자를 제외한 나머지 문자들을 모두 제거합니다.
-     만약 제거 후 마침표(.)가 new_id의 끝에 위치한다면 끝에 위치한 마침표(.) 문자를 제거합니다.
-7단계 new_id의 길이가 2자 이하라면, new_id의 마지막 문자를 new_id의 길이가 3이 될 때까지 반복해서 끝에 붙입니다.
-</code></pre>
-<p>예를 들어, new_id 값이 &quot;...!@BaT#*..y.abcdefghijklm&quot; 라면, 위 7단계를 거치고 나면 new_id는 아래와 같이 변경됩니다.</p>
-<p>1단계 대문자 &#39;B&#39;와 &#39;T&#39;가 소문자 &#39;b&#39;와 &#39;t&#39;로 바뀌었습니다.
-<code class="inline">&quot;...!@BaT#*..y.abcdefghijklm&quot;</code> → <code class="inline">&quot;...!@bat#*..y.abcdefghijklm&quot;</code></p>
-<p>2단계 &#39;!&#39;, &#39;@&#39;, &#39;#&#39;, &#39;<em>&#39; 문자가 제거되었습니다.
-`&quot;...!@bat#</em>..y.abcdefghijklm&quot;<code class="inline">→</code>&quot;...bat..y.abcdefghijklm&quot;`</p>
-<p>3단계 &#39;...&#39;와 &#39;..&#39; 가 &#39;.&#39;로 바뀌었습니다.
-<code class="inline">&quot;...bat..y.abcdefghijklm&quot;</code> → <code class="inline">&quot;.bat.y.abcdefghijklm&quot;</code></p>
-<p>4단계 아이디의 처음에 위치한 &#39;.&#39;가 제거되었습니다.
-<code class="inline">&quot;.bat.y.abcdefghijklm&quot;</code> → <code class="inline">&quot;bat.y.abcdefghijklm&quot;</code></p>
-<p>5단계 아이디가 빈 문자열이 아니므로 변화가 없습니다.
-<code class="inline">&quot;bat.y.abcdefghijklm&quot;</code> → <code class="inline">&quot;bat.y.abcdefghijklm&quot;</code></p>
-<p>6단계 아이디의 길이가 16자 이상이므로, 처음 15자를 제외한 나머지 문자들이 제거되었습니다.
-<code class="inline">&quot;bat.y.abcdefghijklm&quot;</code> → <code class="inline">&quot;bat.y.abcdefghi&quot;</code></p>
-<p>7단계 아이디의 길이가 2자 이하가 아니므로 변화가 없습니다.
-<code class="inline">&quot;bat.y.abcdefghi&quot;</code> → <code class="inline">&quot;bat.y.abcdefghi&quot;</code></p>
-<p>따라서 신규 유저가 입력한 new_id가 &quot;...!@BaT#*..y.abcdefghijklm&quot;일 때, 네오의 프로그램이 추천하는 새로운 아이디는 &quot;bat.y.abcdefghi&quot; 입니다.</p>
-<p>신규 유저가 입력한 아이디를 나타내는 new_id가 매개변수로 주어질 때, &quot;네오&quot;가 설계한 7단계의 처리 과정을 거친 후의 추천 아이디를 return 하도록 solution 함수를 완성해 주세요.</p>
+</ol>
+<p>이때, 첫 번째(3번) 폰켓몬과 네 번째(3번) 폰켓몬을 선택하는 방법은 한 종류(3번 폰켓몬 두 마리)의 폰켓몬만 가질 수 있지만, 다른 방법들은 모두 두 종류의 폰켓몬을 가질 수 있습니다. 따라서 위 예시에서 가질 수 있는 폰켓몬 종류 수의 최댓값은 2가 됩니다.
+당신은 최대한 다양한 종류의 폰켓몬을 가지길 원하기 때문에, 최대한 많은 종류의 폰켓몬을 포함해서 N/2마리를 선택하려 합니다. N마리 폰켓몬의 종류 번호가 담긴 배열 nums가 매개변수로 주어질 때, N/2마리의 폰켓몬을 선택하는 방법 중, 가장 많은 종류의 폰켓몬을 선택하는 방법을 찾아, 그때의 폰켓몬 종류 번호의 개수를 return 하도록 solution 함수를 완성해주세요.</p>
 <h4>제한사항</h4>
 <ul>
-<li>new_id는 길이 1 이상 1,000 이하인 문자열입니다.</li>
-<li>new_id는 알파벳 대문자, 알파벳 소문자, 숫자, 특수문자로 구성되어 있습니다.</li>
-<li>new_id에 나타날 수 있는 특수문자는 <code class="inline">-_.~!@#$%^&amp;*()=+[{]}:?,&lt;&gt;/</code> 로 한정됩니다.</li>
+<li>nums는 폰켓몬의 종류 번호가 담긴 1차원 배열입니다.</li>
+<li>nums의 길이(N)는 1 이상 10,000 이하의 자연수이며, 항상 짝수로 주어집니다.</li>
+<li>폰켓몬의 종류 번호는 1 이상 200,000 이하의 자연수로 나타냅니다.</li>
+<li>가장 많은 종류의 폰켓몬을 선택하는 방법이 여러 가지인 경우에도, 선택할 수 있는 폰켓몬 종류 개수의 최댓값 하나만 return 하면 됩니다.</li>
 
 </ul>
 <h4>입출력 예</h4>
 <figure><table>
 <thead>
-<tr><th>no</th><th>new_id</th><th>result</th></tr></thead>
-<tbody><tr><td>예1</td><td><code class="inline">&quot;...!@BaT#*..y.abcdefghijklm&quot;</code></td><td><code class="inline">&quot;bat.y.abcdefghi&quot;</code></td></tr><tr><td>예2</td><td><code class="inline">&quot;z-+.^.&quot;</code></td><td><code class="inline">&quot;z--&quot;</code></td></tr><tr><td>예3</td><td><code class="inline">&quot;=.=&quot;</code></td><td><code class="inline">&quot;aaa&quot;</code></td></tr><tr><td>예4</td><td><code class="inline">&quot;123_.def&quot;</code></td><td><code class="inline">&quot;123_.def&quot;</code></td></tr><tr><td>예5</td><td><code class="inline">&quot;abcdefghijklmn.p&quot;</code></td><td><code class="inline">&quot;abcdefghijklmn&quot;</code></td></tr></tbody>
+<tr><th>nums</th><th>result</th></tr></thead>
+<tbody><tr><td>[3,1,2,3]</td><td>2</td></tr><tr><td>[3,3,3,2,2,4]</td><td>3</td></tr><tr><td>[3,3,3,2,2,2]</td><td>2</td></tr></tbody>
 </table></figure>
 <h4>입출력 예 설명</h4>
-<p><strong>입출력 예 #1</strong>
-문제의 예시와 같습니다.</p>
-<p><strong>입출력 예 #2</strong>
-7단계를 거치는 동안 new_id가 변화하는 과정은 아래와 같습니다.</p>
-<p>1단계 변화 없습니다.
-2단계 <code class="inline">&quot;z-+.^.&quot;</code> → <code class="inline">&quot;z-..&quot;</code>
-3단계 <code class="inline">&quot;z-..&quot;</code> → <code class="inline">&quot;z-.&quot;</code>
-4단계 <code class="inline">&quot;z-.&quot;</code> → <code class="inline">&quot;z-&quot;</code>
-5단계 변화 없습니다.
-6단계 변화 없습니다.
-7단계 <code class="inline">&quot;z-&quot;</code> → <code class="inline">&quot;z--&quot;</code></p>
-<p><strong>입출력 예 #3</strong>
-7단계를 거치는 동안 new_id가 변화하는 과정은 아래와 같습니다.</p>
-<p>1단계 변화 없습니다.
-2단계 <code class="inline">&quot;=.=&quot;</code> → <code class="inline">&quot;.&quot;</code>
-3단계 변화 없습니다.
-4단계 <code class="inline">&quot;.&quot;</code> → <code class="inline">&quot;&quot;</code> (new_id가 빈 문자열이 되었습니다.)
-5단계 <code class="inline">&quot;&quot;</code> → <code class="inline">&quot;a&quot;</code>
-6단계 변화 없습니다.
-7단계 <code class="inline">&quot;a&quot;</code> → <code class="inline">&quot;aaa&quot;</code></p>
-<p><strong>입출력 예 #4</strong>
-1단계에서 7단계까지 거치는 동안 new_id(&quot;123_.def&quot;)는 변하지 않습니다. 즉, new_id가 처음부터 카카오의 아이디 규칙에 맞습니다.</p>
-<p><strong>입출력 예 #5</strong>
-1단계 변화 없습니다.
-2단계 변화 없습니다.
-3단계 변화 없습니다.
-4단계 변화 없습니다.
-5단계 변화 없습니다.
-6단계 <code class="inline">&quot;abcdefghijklmn.p&quot;</code> → <code class="inline">&quot;abcdefghijklmn.&quot;</code> → <code class="inline">&quot;abcdefghijklmn&quot;</code>
-7단계 변화 없습니다.</p>
+<p>입출력 예 #1</p>
+<p>문제의 예시와 같습니다.</p>
+<p>입출력 예 #2</p>
+<p>6마리의 폰켓몬이 있으므로, 3마리의 폰켓몬을 골라야 합니다.
+가장 많은 종류의 폰켓몬을 고르기 위해서는 3번 폰켓몬 한 마리, 2번 폰켓몬 한 마리, 4번 폰켓몬 한 마리를 고르면 되며, 따라서 3을 return 합니다.</p>
+<p>입출력 예 #3</p>
+<p>6마리의 폰켓몬이 있으므로, 3마리의 폰켓몬을 골라야 합니다.
+가장 많은 종류의 폰켓몬을 고르기 위해서는 3번 폰켓몬 한 마리와 2번 폰켓몬 두 마리를 고르거나, 혹은 3번 폰켓몬 두 마리와 3번 폰켓몬 한 마리를 고르면 됩니다. 따라서 최대 고를 수 있는 폰켓몬 종류의 수는 2입니다.</p>
 <h4>풀이</h4>
-<pre class="line-numbers"><code class='language-python' lang='python'>def solution(new_id):
-    # first filter
-    answer = new_id.lower()
-    recommend_id = &#39;&#39;
-    # second filter
-    for char in answer:
-        if char.isalnum() or char in &#39;-_.&#39;:
-            recommend_id += char
-    # third filter
-    answer = recommend_id
-    while &#39;..&#39; in answer:
-        answer = answer.replace(&#39;..&#39;, &#39;.&#39;)
-    # fourth filter
-    if answer and answer[0] == &#39;.&#39;:
-        answer = answer[1:]
-    if answer and answer[-1] == &#39;.&#39;:
-        answer = answer[:-1]
-    # fifth filter
-    if not answer:
-        answer += &#39;a&#39;
-    # sixth filter
-    answer = answer[:15] if len(answer) &gt; 15 else answer
-    answer = answer[:-1] if answer[-1] == &#39;.&#39; else answer
-    # seventh filter
-    while len(answer) &lt; 3:
-        answer += answer[-1]
-    return answer
+<pre class="line-numbers"><code class='language-python' lang='python'>def solution(nums):
+    return min([int(len(nums) / 2), len(set(nums))])
 </code></pre>
 <h4>설명</h4>
-<p>위에서 설명하는 각 필터의 기능을 코드로 구현하면 간단하게 할 수 있다. 뭐 말은 간단하게 하지만 사실 세번째 필터 기능 구현에서 조금 애를 먹어 다른 코드를 참고했다. 이렇게 기발한 방법이 있었다니. 나는 뭐 재귀함수를 만들어가지고 문자열을 처음부터 검사하면서 점을 만나면 그 다음 요소를 검사한 다음에 만약에 다음 요소에도 점이 있다면 그 두번째 만난 점을 기준으로 앞의 점을 없애고, 다시 처음부터 문자열을 검사하는... 그런 방법을 생각했었다. 이 생각까지 간 다음에 아 이런 방법은 level1에서 요구할 방법이 아니다 싶어서 다른 코드를 참고해서 완성했다. 나머지는 크게 고민할 필요 없는 부분이라 간단했다.</p>
+<p>간단하게 생각할 수 있다. 만약에 선택할 수 있는 폰켓몬의 숫자에 제한이 없다고 한다면, 선택할 수 있는 경우의 수는 주어진 폰켓몬 들 중 서로 다른 종류의 폰켓몬들이기 때문에 set으로 중복을 없앤 폰켓몬의 숫자가 최대 경우의 수이다. 근데 제공한 포켓몬의 숫자를 나누기 2한 만큼만 선택할 수 있기 때문에 그 둘 중 작은 숫자를 반환받으면 된다.</p>
+<p>&nbsp;</p>
