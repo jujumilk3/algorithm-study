@@ -1,45 +1,92 @@
 <h4>[프로그래머스/Level1/파이썬3(python3)] 폰켓몬</h4>
 <h4>문제</h4>
-<p>당신은 폰켓몬을 잡기 위한 오랜 여행 끝에, 홍 박사님의 연구실에 도착했습니다. 홍 박사님은 당신에게 자신의 연구실에 있는 총 N 마리의 폰켓몬 중에서 N/2마리를 가져가도 좋다고 했습니다.
-홍 박사님 연구실의 폰켓몬은 종류에 따라 번호를 붙여 구분합니다. 따라서 같은 종류의 폰켓몬은 같은 번호를 가지고 있습니다. 예를 들어 연구실에 총 4마리의 폰켓몬이 있고, 각 폰켓몬의 종류 번호가 [3번, 1번, 2번, 3번]이라면 이는 3번 폰켓몬 두 마리, 1번 폰켓몬 한 마리, 2번 폰켓몬 한 마리가 있음을 나타냅니다. 이때, 4마리의 폰켓몬 중 2마리를 고르는 방법은 다음과 같이 6가지가 있습니다.</p>
+<p>스마트폰 전화 키패드의 각 칸에 다음과 같이 숫자들이 적혀 있습니다.</p>
+<p><img src="https://grepp-programmers.s3.ap-northeast-2.amazonaws.com/files/production/4b69a271-5f4a-4bf4-9ebf-6ebed5a02d8d/kakao_phone1.png" referrerpolicy="no-referrer" alt="kakao_phone1.png"></p>
+<p>이 전화 키패드에서 왼손과 오른손의 엄지손가락만을 이용해서 숫자만을 입력하려고 합니다.
+맨 처음 왼손 엄지손가락은 <code class="inline">*</code> 키패드에 오른손 엄지손가락은 <code class="inline">#</code> 키패드 위치에서 시작하며, 엄지손가락을 사용하는 규칙은 다음과 같습니다.</p>
 <ol>
-<li>첫 번째(3번), 두 번째(1번) 폰켓몬을 선택</li>
-<li>첫 번째(3번), 세 번째(2번) 폰켓몬을 선택</li>
-<li>첫 번째(3번), 네 번째(3번) 폰켓몬을 선택</li>
-<li>두 번째(1번), 세 번째(2번) 폰켓몬을 선택</li>
-<li>두 번째(1번), 네 번째(3번) 폰켓몬을 선택</li>
-<li>세 번째(2번), 네 번째(3번) 폰켓몬을 선택</li>
+<li>엄지손가락은 상하좌우 4가지 방향으로만 이동할 수 있으며 키패드 이동 한 칸은 거리로 1에 해당합니다.</li>
+<li>왼쪽 열의 3개의 숫자 <code class="inline">1</code>, <code class="inline">4</code>, <code class="inline">7</code>을 입력할 때는 왼손 엄지손가락을 사용합니다.</li>
+<li>오른쪽 열의 3개의 숫자 <code class="inline">3</code>, <code class="inline">6</code>, <code class="inline">9</code>를 입력할 때는 오른손 엄지손가락을 사용합니다.</li>
+<li>가운데 열의 4개의 숫자 <code class="inline">2</code>, <code class="inline">5</code>, <code class="inline">8</code>, <code class="inline">0</code>을 입력할 때는 두 엄지손가락의 현재 키패드의 위치에서 더 가까운 엄지손가락을 사용합니다.
+4-1. 만약 두 엄지손가락의 거리가 같다면, 오른손잡이는 오른손 엄지손가락, 왼손잡이는 왼손 엄지손가락을 사용합니다.</li>
 
 </ol>
-<p>이때, 첫 번째(3번) 폰켓몬과 네 번째(3번) 폰켓몬을 선택하는 방법은 한 종류(3번 폰켓몬 두 마리)의 폰켓몬만 가질 수 있지만, 다른 방법들은 모두 두 종류의 폰켓몬을 가질 수 있습니다. 따라서 위 예시에서 가질 수 있는 폰켓몬 종류 수의 최댓값은 2가 됩니다.
-당신은 최대한 다양한 종류의 폰켓몬을 가지길 원하기 때문에, 최대한 많은 종류의 폰켓몬을 포함해서 N/2마리를 선택하려 합니다. N마리 폰켓몬의 종류 번호가 담긴 배열 nums가 매개변수로 주어질 때, N/2마리의 폰켓몬을 선택하는 방법 중, 가장 많은 종류의 폰켓몬을 선택하는 방법을 찾아, 그때의 폰켓몬 종류 번호의 개수를 return 하도록 solution 함수를 완성해주세요.</p>
+<p>순서대로 누를 번호가 담긴 배열 numbers, 왼손잡이인지 오른손잡이인 지를 나타내는 문자열 hand가 매개변수로 주어질 때, 각 번호를 누른 엄지손가락이 왼손인 지 오른손인 지를 나타내는 연속된 문자열 형태로 return 하도록 solution 함수를 완성해주세요.</p>
 <h4>제한사항</h4>
 <ul>
-<li>nums는 폰켓몬의 종류 번호가 담긴 1차원 배열입니다.</li>
-<li>nums의 길이(N)는 1 이상 10,000 이하의 자연수이며, 항상 짝수로 주어집니다.</li>
-<li>폰켓몬의 종류 번호는 1 이상 200,000 이하의 자연수로 나타냅니다.</li>
-<li>가장 많은 종류의 폰켓몬을 선택하는 방법이 여러 가지인 경우에도, 선택할 수 있는 폰켓몬 종류 개수의 최댓값 하나만 return 하면 됩니다.</li>
+<li><p>numbers 배열의 크기는 1 이상 1,000 이하입니다.</p>
+</li>
+<li><p>numbers 배열 원소의 값은 0 이상 9 이하인 정수입니다.</p>
+</li>
+<li><p>hand는 <code class="inline">&quot;left&quot;</code>또는 <code class="inline">&quot;right&quot;</code>입니다.</p>
+<ul>
+<li><code class="inline">&quot;left&quot;</code>는 왼손잡이,  <code class="inline">&quot;right&quot;</code>는  오른손잡이를 의미합니다.</li>
+
+</ul>
+</li>
+<li><p>왼손 엄지손가락을 사용한 경우는 <code class="inline">L</code>, 오른손 엄지손가락을 사용한 경우는 <code class="inline">R</code>을 순서대로 이어붙여 문자열 형태로 return 해주세요.</p>
+</li>
 
 </ul>
 <h4>입출력 예</h4>
 <figure><table>
 <thead>
-<tr><th>nums</th><th>result</th></tr></thead>
-<tbody><tr><td>[3,1,2,3]</td><td>2</td></tr><tr><td>[3,3,3,2,2,4]</td><td>3</td></tr><tr><td>[3,3,3,2,2,2]</td><td>2</td></tr></tbody>
+<tr><th>numbers</th><th>hand</th><th>result</th></tr></thead>
+<tbody><tr><td>[1, 3, 4, 5, 8, 2, 1, 4, 5, 9, 5]</td><td><code class="inline">&quot;right&quot;</code></td><td><code class="inline">&quot;LRLLLRLLRRL&quot;</code></td></tr><tr><td>[7, 0, 8, 2, 8, 3, 1, 5, 7, 6, 2]</td><td><code class="inline">&quot;left&quot;</code></td><td><code class="inline">&quot;LRLLRRLLLRR&quot;</code></td></tr><tr><td>[1, 2, 3, 4, 5, 6, 7, 8, 9, 0]</td><td><code class="inline">&quot;right&quot;</code></td><td><code class="inline">&quot;LLRLLRLLRL&quot;</code></td></tr></tbody>
 </table></figure>
-<h4>입출력 예 설명</h4>
-<p>입출력 예 #1</p>
-<p>문제의 예시와 같습니다.</p>
-<p>입출력 예 #2</p>
-<p>6마리의 폰켓몬이 있으므로, 3마리의 폰켓몬을 골라야 합니다.
-가장 많은 종류의 폰켓몬을 고르기 위해서는 3번 폰켓몬 한 마리, 2번 폰켓몬 한 마리, 4번 폰켓몬 한 마리를 고르면 되며, 따라서 3을 return 합니다.</p>
-<p>입출력 예 #3</p>
-<p>6마리의 폰켓몬이 있으므로, 3마리의 폰켓몬을 골라야 합니다.
-가장 많은 종류의 폰켓몬을 고르기 위해서는 3번 폰켓몬 한 마리와 2번 폰켓몬 두 마리를 고르거나, 혹은 3번 폰켓몬 두 마리와 3번 폰켓몬 한 마리를 고르면 됩니다. 따라서 최대 고를 수 있는 폰켓몬 종류의 수는 2입니다.</p>
+<h5><strong>입출력 예에 대한 설명</strong></h5>
+<p><strong>입출력 예 #1</strong></p>
+<p>순서대로 눌러야 할 번호가 [1, 3, 4, 5, 8, 2, 1, 4, 5, 9, 5]이고, 오른손잡이입니다.</p>
+<figure><table>
+<thead>
+<tr><th>왼손 위치</th><th>오른손 위치</th><th>눌러야 할 숫자</th><th>사용한 손</th><th>설명</th></tr></thead>
+<tbody><tr><td>*</td><td>#</td><td>1</td><td>L</td><td>1은 왼손으로 누릅니다.</td></tr><tr><td>1</td><td>#</td><td>3</td><td>R</td><td>3은 오른손으로 누릅니다.</td></tr><tr><td>1</td><td>3</td><td>4</td><td>L</td><td>4는 왼손으로 누릅니다.</td></tr><tr><td>4</td><td>3</td><td>5</td><td>L</td><td>왼손 거리는 1, 오른손 거리는 2이므로 왼손으로 5를 누릅니다.</td></tr><tr><td>5</td><td>3</td><td>8</td><td>L</td><td>왼손 거리는 1, 오른손 거리는 3이므로 왼손으로 8을 누릅니다.</td></tr><tr><td>8</td><td>3</td><td>2</td><td>R</td><td>왼손 거리는 2, 오른손 거리는 1이므로 오른손으로 2를 누릅니다.</td></tr><tr><td>8</td><td>2</td><td>1</td><td>L</td><td>1은 왼손으로 누릅니다.</td></tr><tr><td>1</td><td>2</td><td>4</td><td>L</td><td>4는 왼손으로 누릅니다.</td></tr><tr><td>4</td><td>2</td><td>5</td><td>R</td><td>왼손 거리와 오른손 거리가 1로 같으므로, 오른손으로 5를 누릅니다.</td></tr><tr><td>4</td><td>5</td><td>9</td><td>R</td><td>9는 오른손으로 누릅니다.</td></tr><tr><td>4</td><td>9</td><td>5</td><td>L</td><td>왼손 거리는 1, 오른손 거리는 2이므로 왼손으로 5를 누릅니다.</td></tr><tr><td>5</td><td>9</td><td>-</td><td>-</td><td>&nbsp;</td></tr></tbody>
+</table></figure>
+<p>따라서 <code class="inline">&quot;LRLLLRLLRRL&quot;</code>를 return 합니다.</p>
+<p><strong>입출력 예 #2</strong></p>
+<p>왼손잡이가 [7, 0, 8, 2, 8, 3, 1, 5, 7, 6, 2]를 순서대로 누르면 사용한 손은 <code class="inline">&quot;LRLLRRLLLRR&quot;</code>이 됩니다.</p>
+<p><strong>입출력 예 #3</strong></p>
+<p>오른손잡이가 [1, 2, 3, 4, 5, 6, 7, 8, 9, 0]를 순서대로 누르면 사용한 손은 <code class="inline">&quot;LLRLLRLLRL&quot;</code>이 됩니다.</p>
 <h4>풀이</h4>
-<pre class="line-numbers"><code class='language-python' lang='python'>def solution(nums):
-    return min([int(len(nums) / 2), len(set(nums))])
+<pre class="line-numbers"><code class='language-python' lang='python'>def solution(numbers, hand):
+    answer = &#39;&#39;
+    last_left_finger = &#39;*&#39;
+    last_right_finger = &#39;#&#39;
+    numpad = {
+        1: (1, 1), 2: (2, 1), 3: (3, 1),
+        4: (1, 2), 5: (2, 2), 6: (3, 2),
+        7: (1, 3), 8: (2, 3), 9: (3, 3),
+        &#39;*&#39;: (1, 4), 0: (2, 4), &#39;#&#39;: (3, 4)
+    }
+    for number in numbers:
+        if number in [1, 4, 7]:
+            answer += &#39;L&#39;
+            last_left_finger = number
+        elif number in [3, 6, 9]:
+            answer += &#39;R&#39;
+            last_right_finger = number
+        else:
+            left_finger_x_distance = abs(numpad[number][0] - numpad[last_left_finger][0])
+            left_finger_y_distance = abs(numpad[number][1] - numpad[last_left_finger][1])
+            left_finger_distance = left_finger_x_distance + left_finger_y_distance
+            right_finger_x_distance = abs(numpad[number][0] - numpad[last_right_finger][0])
+            right_finger_y_distance = abs(numpad[number][1] - numpad[last_right_finger][1])
+            right_finger_distance = right_finger_x_distance + right_finger_y_distance
+            if left_finger_distance &lt; right_finger_distance:
+                answer += &#39;L&#39;
+                last_left_finger = number
+            elif left_finger_distance &gt; right_finger_distance:
+                answer += &#39;R&#39;
+                last_right_finger = number
+            elif left_finger_distance == right_finger_distance:
+                if hand == &#39;left&#39;:
+                    answer += &#39;L&#39;
+                    last_left_finger = number
+                elif hand == &#39;right&#39;:
+                    answer += &#39;R&#39;
+                    last_right_finger = number
+    return answer
 </code></pre>
 <h4>설명</h4>
-<p>간단하게 생각할 수 있다. 만약에 선택할 수 있는 폰켓몬의 숫자에 제한이 없다고 한다면, 선택할 수 있는 경우의 수는 주어진 폰켓몬 들 중 서로 다른 종류의 폰켓몬들이기 때문에 set으로 중복을 없앤 폰켓몬의 숫자가 최대 경우의 수이다. 근데 제공한 포켓몬의 숫자를 나누기 2한 만큼만 선택할 수 있기 때문에 그 둘 중 작은 숫자를 반환받으면 된다.</p>
-<p>&nbsp;</p>
+<p>문제를 처음 만났을 때 각 손가락과 눌러야 하는 버튼의 거리, 그리고 숫자패드라는 2차원 공간이 주어졌기 때문에 2차원 배열이 딱 연상됐다. 그리고 만들었다. 하지만 눌러야 하는 버튼값을 기준으로 그 버튼의 위치 인덱스를 계산하는 데 있어서 굉장한 귀찮음이 밀려왔다. 예를 들어 눌러야 하는 숫자가 <code class="inline">1, 4, 7</code>이나 <code class="inline">3, 6, 9</code>면 단순히 왼손 오른손으로 구분하면 되지만 <code class="inline">2, 5, 8, 0</code> 중 하나에 해당될 시에는 왼손가락, 오른손가락의 현재 위치와 내가 눌러야 하는 버튼의 위치 모두를 구해서 차이를 구해야 하는데 현재 번호라는 정보 하나만 주어졌을 때 2차원 배열을 전부 조사해 그 숫자의 좌표값(2차원 배열의 인덱스)를 구하는 게 너무 큰 작업처럼 느껴졌다. 그래서 그냥 좌표를 만들어서 했다. 간단하고 직관적이게 해결된 것 같아 만족스럽다.</p>
