@@ -12,6 +12,11 @@ def solution(nums):
                 current_number_prime = False
         if current_number_prime:
             answer += 1
+
+    for i in range(len(nums)):
+        for j in range(i + 1, len(nums)):
+            for k in range(j + 1, len(nums)):
+                print(i, j, k)
     return answer
 
 
