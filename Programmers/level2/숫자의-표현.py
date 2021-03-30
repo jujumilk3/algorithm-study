@@ -10,9 +10,6 @@ def solution(n):
             elif temp_j > n:
                 break
     return answer
-"""
-1차시도. 로직은 정답이었으나 시간초과가 떴다. O(n^2)미만의 시간복잡도를 가진 로지
-"""
 
 
 print(solution(15))
