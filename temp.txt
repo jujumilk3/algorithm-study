@@ -1,58 +1,33 @@
-<h4>[프로그래머스/Level2/파이썬3(python3)] H-index</h4>
+<h4>[프로그래머스/Level2/파이썬3(python3)] JadenCase 문자열 만들기</h4>
 <h4>문제</h4>
-<p>H-Index는 과학자의 생산성과 영향력을 나타내는 지표입니다. 어느 과학자의 H-Index를 나타내는 값인 h를 구하려고 합니다. 위키백과<a href='https://programmers.co.kr/learn/courses/30/lessons/42747#fn1'>1</a>에 따르면, H-Index는 다음과 같이 구합니다.</p>
-<p>어떤 과학자가 발표한 논문 <code class="inline">n</code>편 중, <code class="inline">h</code>번 이상 인용된 논문이 <code class="inline">h</code>편 이상이고 나머지 논문이 h번 이하 인용되었다면 <code class="inline">h</code>의 최댓값이 이 과학자의 H-Index입니다.</p>
-<p>어떤 과학자가 발표한 논문의 인용 횟수를 담은 배열 citations가 매개변수로 주어질 때, 이 과학자의 H-Index를 return 하도록 solution 함수를 작성해주세요.</p>
+<p>JadenCase란 모든 단어의 첫 문자가 대문자이고, 그 외의 알파벳은 소문자인 문자열입니다. 문자열 s가 주어졌을 때, s를 JadenCase로 바꾼 문자열을 리턴하는 함수, solution을 완성해주세요.</p>
 <h4>제한사항</h4>
 <ul>
-<li>과학자가 발표한 논문의 수는 1편 이상 1,000편 이하입니다.</li>
-<li>논문별 인용 횟수는 0회 이상 10,000회 이하입니다.</li>
+<li>s는 길이 1 이상인 문자열입니다.</li>
+<li>s는 알파벳과 공백문자(&quot; &quot;)로 이루어져 있습니다.</li>
+<li>첫 문자가 영문이 아닐때에는 이어지는 영문은 소문자로 씁니다. ( 첫번째 입출력 예 참고 )</li>
 
 </ul>
 <h4>입출력 예</h4>
 <figure><table class="tg">
 <thead>
-<tr><th>citations</th><th>return</th></tr></thead>
-<tbody><tr><td>[3, 0, 6, 1, 5]</td><td>3</td></tr></tbody>
+<tr><th>s</th><th style='text-align:center;' >return</th></tr></thead>
+<tbody><tr><td>&quot;3people unFollowed me&quot;</td><td style='text-align:center;' >&quot;3people Unfollowed Me&quot;</td></tr><tr><td>&quot;for the last week&quot;</td><td style='text-align:center;' >&quot;For The Last Week&quot;</td></tr></tbody>
 </table></figure>
-<h4>입출력 예 설명</h4>
-<p>이 과학자가 발표한 논문의 수는 5편이고, 그중 3편의 논문은 3회 이상 인용되었습니다. 그리고 나머지 2편의 논문은 3회 이하 인용되었기 때문에 이 과학자의 H-Index는 3입니다.</p>
 <h4>풀이</h4>
-<pre class="line-numbers"><code class='language-python' lang='python'>def solution(citations):
-    mins = []
-    quote = [0] * len(citations)
-    for i in range(len(citations)):
-        for j in range(len(citations)):
-            if citations[i] &lt;= citations[j]:
-                quote[i] += 1
-    for i, j in zip(citations, quote):
-        mins.append(min(i, j))
-    return max(mins)
+<pre class="line-numbers"><code class='language-python' lang='python'>def solution(s):
+    answer = &#39;&#39;
+    wording = False
+    for char in s:
+        if char == &#39; &#39;:
+            answer += char
+            wording = False
+        elif not wording:
+            answer += char.upper()
+            wording = True
+        elif wording:
+            answer += char.lower()
+    return answer
 </code></pre>
 <h4>설명</h4>
-<p>처음에 문제를 읽었을 땐 설명이 너무 간단하고 입출력 예도 하나밖에 없어서 이게 웬 궤변인가 싶었는데 예제를 하나하나 만들어서 인간의 언어와 뇌로 값들을 도출해보니 생각보다 간단한 문제였다.<br/>쉽게 설명하자면 이렇다.</p>
-<p>&nbsp;</p>
-<p>1편 이상 인용된 논문만 200편이어도 h-index는 1이다.
-2편 이상 인용된 논문만 200편이어도 h-index는 2이다.
-3편 이상 인용된 논문이 2편 있으면 h-index는 3이 아니다.</p>
-<p>&nbsp;</p>
-<p>그러니까 결국 이거다.</p>
-<p>&nbsp;</p>
-<ol>
-<li>주어진 배열에서 특정 수 A가 나왔을 때 그 숫자와 같거나 큰 숫자들의 갯수를 센다.</li>
-<li>A와 같거나 큰 숫자들이 A갯수 이상일 때 A에 대한 h-index 후보는 A가 된다.</li>
-<li>만약 주어진 배열에서 A와 같거나 큰 숫자들 A갯수 미만일 때는 A는 후보에 들지 못한다.</li>
-<li>난 코드에서 이 숫자를 quote(인용)라는 이름의 list로 정의했다.</li>
-
-</ol>
-<p>&nbsp;</p>
-<p>예제로 주어진 3, 0, 6, 1, 5에 대해서 이를 정의해보자.</p><br/>
-<ol>
-<li>3번 이상 인용된 논문은 3, 6, 5 총 3개이므로 3번 인용된 논문에 대한 h-index 후보는 3이 된다.</li>
-<li>마찬가지로 0번 이상은 5개이므로 h-index 후보는 0</li>
-<li>6번 이상은 1개이므로 0</li>
-<li>1번 이상은 4개이므로 1</li>
-<li>5번 이상은 2개이므로 0</li>
-
-</ol>
-<p>그렇게 각 논문에 대한 h-index후보들 중 가장 큰 요소를 반환해주면 된다.</p>
+<p>간단하게 공백은 그대로 붙이고, 단어가 처음 오면 대문자, 계속되는 중이면 소문자를 붙이는 식으로 코딩하였다. 하지만 다른 사람들의 답을 보니 <code class="inline">s.title()</code>이나 <code class="inline">s.capitalize()</code>같은 간단한 함수를 이용해 해결했더라. 역시 아는 게 많으면 고생을 덜하는 것 같다. 참고로 title함수는 문제의 내용 그대로 구현돼있는 함수이고 capitalize는 문자열이 주어졌을 때 맨 앞자리 글자만 대문자로 바꿔주는 함수이다. </p>
