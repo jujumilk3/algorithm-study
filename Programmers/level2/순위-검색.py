@@ -16,6 +16,8 @@ def solution(info, query):
             elif language in personal:
                 filtered.append(personal)
         print(filtered)
+        for personal in filtered:
+            print(personal)
 
     return answer
 
