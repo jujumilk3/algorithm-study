@@ -1,265 +1,49 @@
-<h4>[프로그래머스/Level2/파이썬3(python3)] 순위-검색</h4>
+<h4>[프로그래머스/Level2/파이썬3(python3)] 뉴스 클러스터링</h4>
 <h4>문제</h4>
-<p><strong>[본 문제는 정확성과 효율성 테스트 각각 점수가 있는 문제입니다.]</strong></p>
-<p>카카오는 하반기 경력 개발자 공개채용을 진행 중에 있으며 현재 지원서 접수와 코딩테스트가 종료되었습니다. 이번 채용에서 지원자는 지원서 작성 시 아래와 같이 4가지 항목을 반드시 선택하도록 하였습니다.</p>
+<p>여러 언론사에서 쏟아지는 뉴스, 특히 속보성 뉴스를 보면 비슷비슷한 제목의 기사가 많아 정작 필요한 기사를 찾기가 어렵다. Daum 뉴스의 개발 업무를 맡게 된 신입사원 튜브는 사용자들이 편리하게 다양한 뉴스를 찾아볼 수 있도록 문제점을 개선하는 업무를 맡게 되었다.</p>
+<p>개발의 방향을 잡기 위해 튜브는 우선 최근 화제가 되고 있는 &quot;카카오 신입 개발자 공채&quot; 관련 기사를 검색해보았다.</p><br/>
 <ul>
-<li>코딩테스트 참여 개발언어 항목에 cpp, java, python 중 하나를 선택해야 합니다.</li>
-<li>지원 직군 항목에 backend와 frontend 중 하나를 선택해야 합니다.</li>
-<li>지원 경력구분 항목에 junior와 senior 중 하나를 선택해야 합니다.</li>
-<li>선호하는 소울푸드로 chicken과 pizza 중 하나를 선택해야 합니다.</li>
+<li>카카오 첫 공채..&#39;블라인드&#39; 방식 채용</li>
+<li>카카오, 합병 후 첫 공채.. 블라인드 전형으로 개발자 채용</li>
+<li>카카오, 블라인드 전형으로 신입 개발자 공채</li>
+<li>카카오 공채, 신입 개발자 코딩 능력만 본다</li>
+<li>카카오, 신입 공채.. &quot;코딩 실력만 본다&quot;</li>
+<li>카카오 &quot;코딩 능력만으로 2018 신입 개발자 뽑는다&quot;</li>
 
 </ul>
-<p>인재영입팀에 근무하고 있는 <code class="inline">니니즈</code>는 코딩테스트 결과를 분석하여 채용에 참여한 개발팀들에 제공하기 위해 지원자들의 지원 조건을 선택하면 해당 조건에 맞는 지원자가 몇 명인 지 쉽게 알 수 있는 도구를 만들고 있습니다.
-예를 들어, 개발팀에서 궁금해하는 문의사항은 다음과 같은 형태가 될 수 있습니다.
-<code class="inline">코딩테스트에 java로 참여했으며, backend 직군을 선택했고, junior 경력이면서, 소울푸드로 pizza를 선택한 사람 중 코딩테스트 점수를 50점 이상 받은 지원자는 몇 명인가?</code></p>
-<p>물론 이 외에도 각 개발팀의 상황에 따라 아래와 같이 다양한 형태의 문의가 있을 수 있습니다.</p>
+<p>기사의 제목을 기준으로 &quot;블라인드 전형&quot;에 주목하는 기사와 &quot;코딩 테스트&quot;에 주목하는 기사로 나뉘는 걸 발견했다. 튜브는 이들을 각각 묶어서 보여주면 카카오 공채 관련 기사를 찾아보는 사용자에게 유용할 듯싶었다.</p>
+<p>유사한 기사를 묶는 기준을 정하기 위해서 논문과 자료를 조사하던 튜브는 &quot;자카드 유사도&quot;라는 방법을 찾아냈다.</p>
+<p>자카드 유사도는 집합 간의 유사도를 검사하는 여러 방법 중의 하나로 알려져 있다. 두 집합 <code class="inline">A</code>, <code class="inline">B</code> 사이의 자카드 유사도 <code class="inline">J(A, B)</code>는 두 집합의 교집합 크기를 두 집합의 합집합 크기로 나눈 값으로 정의된다.</p>
+<p>예를 들어 집합 <code class="inline">A</code> = {1, 2, 3}, 집합 <code class="inline">B</code> = {2, 3, 4}라고 할 때, 교집합 <code class="inline">A ∩ B</code> = {2, 3}, 합집합 <code class="inline">A ∪ B</code> = {1, 2, 3, 4}이 되므로, 집합 <code class="inline">A</code>, <code class="inline">B</code> 사이의 자카드 유사도 <code class="inline">J(A, B)</code> = 2/4 = 0.5가 된다. 집합 A와 집합 B가 모두 공집합일 경우에는 나눗셈이 정의되지 않으니 따로 <code class="inline">J(A, B)</code> = 1로 정의한다.</p>
+<p>자카드 유사도는 원소의 중복을 허용하는 다중집합에 대해서 확장할 수 있다. 다중집합 <code class="inline">A</code>는 원소 &quot;1&quot;을 3개 가지고 있고, 다중집합 <code class="inline">B</code>는 원소 &quot;1&quot;을 5개 가지고 있다고 하자. 이 다중집합의 교집합 <code class="inline">A ∩ B</code>는 원소 &quot;1&quot;을 min(3, 5)인 3개, 합집합 <code class="inline">A ∪ B</code>는 원소 &quot;1&quot;을 max(3, 5)인 5개 가지게 된다. 다중집합 <code class="inline">A</code> = {1, 1, 2, 2, 3}, 다중집합 <code class="inline">B</code> = {1, 2, 2, 4, 5}라고 하면, 교집합 <code class="inline">A ∩ B</code> = {1, 2, 2}, 합집합 <code class="inline">A ∪ B</code> = {1, 1, 2, 2, 3, 4, 5}가 되므로, 자카드 유사도 <code class="inline">J(A, B)</code> = 3/7, 약 0.42가 된다.</p>
+<p>이를 이용하여 문자열 사이의 유사도를 계산하는데 이용할 수 있다. 문자열 &quot;FRANCE&quot;와 &quot;FRENCH&quot;가 주어졌을 때, 이를 두 글자씩 끊어서 다중집합을 만들 수 있다. 각각 {FR, RA, AN, NC, CE}, {FR, RE, EN, NC, CH}가 되며, 교집합은 {FR, NC}, 합집합은 {FR, RA, AN, NC, CE, RE, EN, CH}가 되므로, 두 문자열 사이의 자카드 유사도 <code class="inline">J(&quot;FRANCE&quot;, &quot;FRENCH&quot;)</code> = 2/8 = 0.25가 된다.</p>
+<h4>입력 형식</h4>
 <ul>
-<li>코딩테스트에 python으로 참여했으며, frontend 직군을 선택했고, senior 경력이면서, 소울푸드로 chicken을 선택한 사람 중 코딩테스트 점수를 100점 이상 받은 사람은 모두 몇 명인가?</li>
-<li>코딩테스트에 cpp로 참여했으며, senior 경력이면서, 소울푸드로 pizza를 선택한 사람 중 코딩테스트 점수를 100점 이상 받은 사람은 모두 몇 명인가?</li>
-<li>backend 직군을 선택했고, senior 경력이면서 코딩테스트 점수를 200점 이상 받은 사람은 모두 몇 명인가?</li>
-<li>소울푸드로 chicken을 선택한 사람 중 코딩테스트 점수를 250점 이상 받은 사람은 모두 몇 명인가?</li>
-<li>코딩테스트 점수를 150점 이상 받은 사람은 모두 몇 명인가?</li>
+<li>입력으로는 <code class="inline">str1</code>과 <code class="inline">str2</code>의 두 문자열이 들어온다. 각 문자열의 길이는 2 이상, 1,000 이하이다.</li>
+<li>입력으로 들어온 문자열은 두 글자씩 끊어서 다중집합의 원소로 만든다. 이때 영문자로 된 글자 쌍만 유효하고, 기타 공백이나 숫자, 특수 문자가 들어있는 경우는 그 글자 쌍을 버린다. 예를 들어 &quot;ab+&quot;가 입력으로 들어오면, &quot;ab&quot;만 다중집합의 원소로 삼고, &quot;b+&quot;는 버린다.</li>
+<li>다중집합 원소 사이를 비교할 때, 대문자와 소문자의 차이는 무시한다. &quot;AB&quot;와 &quot;Ab&quot;, &quot;ab&quot;는 같은 원소로 취급한다.</li>
 
 </ul>
-<p>즉, 개발팀에서 궁금해하는 내용은 다음과 같은 형태를 갖습니다.</p>
-<pre class="line-numbers"><code class="inline">* [조건]을 만족하는 사람 중 코딩테스트 점수를 X점 이상 받은 사람은 모두 몇 명인가?
-</code></pre>
-<hr />
-<h4><strong>[문제]</strong></h4>
-<p>지원자가 지원서에 입력한 4가지의 정보와 획득한 코딩테스트 점수를 하나의 문자열로 구성한 값의 배열 info, 개발팀이 궁금해하는 문의조건이 문자열 형태로 담긴 배열 query가 매개변수로 주어질 때,
-각 문의조건에 해당하는 사람들의 숫자를 순서대로 배열에 담아 return 하도록 solution 함수를 완성해 주세요.</p>
-<h4><strong>[제한사항]</strong></h4>
-<ul>
-<li><p>info 배열의 크기는 1 이상 50,000 이하입니다.</p>
-</li>
-<li><p>info 배열 각 원소의 값은 지원자가 지원서에 입력한 4가지 값과 코딩테스트 점수를 합친 &quot;개발언어 직군 경력 소울푸드 점수&quot; 형식입니다.</p>
-<ul>
-<li>개발언어는 cpp, java, python 중 하나입니다.</li>
-<li>직군은 backend, frontend 중 하나입니다.</li>
-<li>경력은 junior, senior 중 하나입니다.</li>
-<li>소울푸드는 chicken, pizza 중 하나입니다.</li>
-<li>점수는 코딩테스트 점수를 의미하며, 1 이상 100,000 이하인 자연수입니다.</li>
-<li>각 단어는 공백문자(스페이스 바) 하나로 구분되어 있습니다.</li>
-
-</ul>
-</li>
-<li><p>query 배열의 크기는 1 이상 100,000 이하입니다.</p>
-</li>
-<li><p>query의 각 문자열은 &quot;[조건] X&quot; 형식입니다.</p>
-<ul>
-<li>[조건]은 &quot;개발언어 and 직군 and 경력 and 소울푸드&quot; 형식의 문자열입니다.</li>
-<li>언어는 cpp, java, python, - 중 하나입니다.</li>
-<li>직군은 backend, frontend, - 중 하나입니다.</li>
-<li>경력은 junior, senior, - 중 하나입니다.</li>
-<li>소울푸드는 chicken, pizza, - 중 하나입니다.</li>
-<li>&#39;-&#39; 표시는 해당 조건을 고려하지 않겠다는 의미입니다.</li>
-<li>X는 코딩테스트 점수를 의미하며 조건을 만족하는 사람 중 X점 이상 받은 사람은 모두 몇 명인 지를 의미합니다.</li>
-<li>각 단어는 공백문자(스페이스 바) 하나로 구분되어 있습니다.</li>
-<li>예를 들면, &quot;cpp and - and senior and pizza 500&quot;은 &quot;cpp로 코딩테스트를 봤으며, 경력은 senior 이면서 소울푸드로 pizza를 선택한 지원자 중 코딩테스트 점수를 500점 이상 받은 사람은 모두 몇 명인가?&quot;를 의미합니다.</li>
-
-</ul>
-</li>
-
-</ul>
+<h4>출력 형식</h4>
+<p>입력으로 들어온 두 문자열의 자카드 유사도를 출력한다. 유사도 값은 0에서 1 사이의 실수이므로, 이를 다루기 쉽도록 65536을 곱한 후에 소수점 아래를 버리고 정수부만 출력한다.</p>
 <h4>입출력 예</h4>
-<figure><table>
+<figure><table class="tg">
 <thead>
-<tr><th>info</th><th>query</th><th>result</th></tr></thead>
-<tbody><tr><td><code class="inline">[&quot;java backend junior pizza 150&quot;,&quot;python frontend senior chicken 210&quot;,&quot;python frontend senior chicken 150&quot;,&quot;cpp backend senior pizza 260&quot;,&quot;java backend junior chicken 80&quot;,&quot;python backend senior chicken 50&quot;]</code></td><td><code class="inline">[&quot;java and backend and junior and pizza 100&quot;,&quot;python and frontend and senior and chicken 200&quot;,&quot;cpp and <span style='font-family:"Open Sans", "Clear Sans", "Helvetica Neue", Helvetica, Arial, sans-serif'>-</span> and senior and pizza 250&quot;,&quot;<span style='font-family:"Open Sans", "Clear Sans", "Helvetica Neue", Helvetica, Arial, sans-serif'>-</span> and backend and senior and <span style='font-family:"Open Sans", "Clear Sans", "Helvetica Neue", Helvetica, Arial, sans-serif'>-</span> 150&quot;,&quot;<span style='font-family:"Open Sans", "Clear Sans", "Helvetica Neue", Helvetica, Arial, sans-serif'>-</span> and <span style='font-family:"Open Sans", "Clear Sans", "Helvetica Neue", Helvetica, Arial, sans-serif'>-</span> and <span style='font-family:"Open Sans", "Clear Sans", "Helvetica Neue", Helvetica, Arial, sans-serif'>-</span> and chicken 100&quot;,&quot;<span style='font-family:"Open Sans", "Clear Sans", "Helvetica Neue", Helvetica, Arial, sans-serif'>-</span> and <span style='font-family:"Open Sans", "Clear Sans", "Helvetica Neue", Helvetica, Arial, sans-serif'>-</span> and <span style='font-family:"Open Sans", "Clear Sans", "Helvetica Neue", Helvetica, Arial, sans-serif'>-</span> and <span style='font-family:"Open Sans", "Clear Sans", "Helvetica Neue", Helvetica, Arial, sans-serif'>-</span> 150&quot;]</code></td><td>[1,1,1,1,2,4]</td></tr></tbody>
+<tr><th>str1</th><th>str2</th><th>answer</th></tr></thead>
+<tbody><tr><td>FRANCE</td><td>french</td><td>16384</td></tr><tr><td>handshake</td><td>shake hands</td><td>65536</td></tr><tr><td>aa1+aa2</td><td>AAAA12</td><td>43690</td></tr><tr><td>E=M*C^2</td><td>e=m*c^2</td><td>65536</td></tr></tbody>
 </table></figure>
-<h4>입출력 예에 대한 설명</h4>
-<p>지원자 정보를 표로 나타내면 다음과 같습니다.</p>
-<figure><table>
-<thead>
-<tr><th>언어</th><th>직군</th><th>경력</th><th>소울 푸드</th><th>점수</th></tr></thead>
-<tbody><tr><td>java</td><td>backend</td><td>junior</td><td>pizza</td><td>150</td></tr><tr><td>python</td><td>frontend</td><td>senior</td><td>chicken</td><td>210</td></tr><tr><td>python</td><td>frontend</td><td>senior</td><td>chicken</td><td>150</td></tr><tr><td>cpp</td><td>backend</td><td>senior</td><td>pizza</td><td>260</td></tr><tr><td>java</td><td>backend</td><td>junior</td><td>chicken</td><td>80</td></tr><tr><td>python</td><td>backend</td><td>senior</td><td>chicken</td><td>50</td></tr></tbody>
-</table></figure>
-<ul>
-<li><code class="inline">&quot;java and backend and junior and pizza 100&quot;</code> : java로 코딩테스트를 봤으며, backend 직군을 선택했고 junior 경력이면서 소울푸드로 pizza를 선택한 지원자 중 코딩테스트 점수를 100점 이상 받은 지원자는 1명 입니다.</li>
-<li><code class="inline">&quot;python and frontend and senior and chicken 200&quot;</code> : python으로 코딩테스트를 봤으며, frontend 직군을 선택했고, senior 경력이면서 소울 푸드로 chicken을 선택한 지원자 중 코딩테스트 점수를 200점 이상 받은 지원자는 1명 입니다.</li>
-<li><code class="inline">&quot;cpp and <span style='font-family:"Open Sans", "Clear Sans", "Helvetica Neue", Helvetica, Arial, sans-serif'>-</span> and senior and pizza 250&quot;</code> : cpp로 코딩테스트를 봤으며, senior 경력이면서 소울푸드로 pizza를 선택한 지원자 중 코딩테스트 점수를 250점 이상 받은 지원자는 1명 입니다.</li>
-<li><code class="inline">&quot;<span style='font-family:"Open Sans", "Clear Sans", "Helvetica Neue", Helvetica, Arial, sans-serif'>-</span> and backend and senior and <span style='font-family:"Open Sans", "Clear Sans", "Helvetica Neue", Helvetica, Arial, sans-serif'>-</span> 150&quot;</code> : backend 직군을 선택했고, senior 경력인 지원자 중 코딩테스트 점수를 150점 이상 받은 지원자는 1명 입니다.</li>
-<li><code class="inline">&quot;<span style='font-family:"Open Sans", "Clear Sans", "Helvetica Neue", Helvetica, Arial, sans-serif'>-</span> and <span style='font-family:"Open Sans", "Clear Sans", "Helvetica Neue", Helvetica, Arial, sans-serif'>-</span> and <span style='font-family:"Open Sans", "Clear Sans", "Helvetica Neue", Helvetica, Arial, sans-serif'>-</span> and chicken 100&quot;</code> : 소울푸드로 chicken을 선택한 지원자 중 코딩테스트 점수를 100점 이상을 받은 지원자는 2명 입니다.</li>
-<li><code class="inline">&quot;<span style='font-family:"Open Sans", "Clear Sans", "Helvetica Neue", Helvetica, Arial, sans-serif'>-</span> and <span style='font-family:"Open Sans", "Clear Sans", "Helvetica Neue", Helvetica, Arial, sans-serif'>-</span> and <span style='font-family:"Open Sans", "Clear Sans", "Helvetica Neue", Helvetica, Arial, sans-serif'>-</span> and <span style='font-family:"Open Sans", "Clear Sans", "Helvetica Neue", Helvetica, Arial, sans-serif'>-</span> 150&quot;</code> : 코딩테스트 점수를 150점 이상 받은 지원자는 4명 입니다.</li>
-
-</ul>
 <h4>풀이</h4>
-<pre class="line-numbers"><code class='language-python' lang='python'>def solution(info, query):
-    answer = []
-    applicants = defaultdict(list)
-    for personal in info:
-        divided = personal.split()
-        conditions = divided[:-1]
-        score = int(divided[-1])
-        for i in range(5):
-            for comb in combinations(conditions, i):
-                applicants[&#39;&#39;.join(comb)].append(score)
-
-    for conditions in applicants:
-        applicants[conditions].sort()
-
-    for search in query:
-        divided = search.split(&#39; &#39;)
-        score = int(divided[-1])
-        conditions = divided[:-1]
-        conditions_as_string = &#39;&#39;.join(conditions).replace(&#39;-&#39;, &#39;&#39;).replace(&#39;and&#39;, &#39;&#39;)
-        if conditions_as_string in applicants:
-            scores = applicants[conditions_as_string]
-            if len(scores) &gt; 0:
-                start, end = 0, len(scores)
-                while end &gt; start:
-                    mid = (start + end) // 2
-                    if scores[mid] &gt;= score:
-                        end = mid
-                    else:
-                        start = mid + 1
-                answer.append(len(scores) - start)
-        else:
-            answer.append(0)
-    return answer
+<pre class="line-numbers"><code class='language-python' lang='python'>def solution(str1, str2):
+    str1_pairs = [str1[i:i+2].upper() for i in range(len(str1)-1) if str1[i:i+2].isalpha()]
+    str2_pairs = [str2[i:i+2].upper() for i in range(len(str2)-1) if str2[i:i+2].isalpha()]
+    inter = set(str1_pairs) &amp; set(str2_pairs)
+    union = set(str1_pairs) | set(str2_pairs)
+    if not union:
+        return 65536
+    else:
+        inter_sum = sum([min(str1_pairs.count(pair), str2_pairs.count(pair)) for pair in inter])
+        union_sum = sum([max(str1_pairs.count(pair), str2_pairs.count(pair)) for pair in union])
+        return int((inter_sum / union_sum) * 65536)
 </code></pre>
-<h4>설명</h4>
-<p>맨처음에 풀었던 답은 이래와 같다.</p>
-<pre class="line-numbers"><code class='language-python' lang='python'>def solution(info, query):
-    answer = []
-    for search in query:
-        search_query = search.split(&#39; and &#39;)
-        language = search_query[0]
-        division = search_query[1]
-        career = search_query[2]
-        food = search_query[3].split()[0]
-        score = search_query[3].split()[1]
-        filtered = []
-        for personal in info:
-            if language == &#39;-&#39;:
-                filtered.append(personal)
-            elif language in personal:
-                filtered.append(personal)
-        for index, personal in enumerate(filtered):
-            if division != &#39;-&#39; and division not in personal:
-                filtered[index] = None
-            if career != &#39;-&#39; and career not in personal:
-                filtered[index] = None
-            if food != &#39;-&#39; and food not in personal:
-                filtered[index] = None
-            if score != &#39;-&#39; and int(score) &gt; int(personal.split()[-1]):
-                filtered[index] = None
-        answer.append(len(list(filter(lambda x: x is not None, filtered))))
-    return answer
-</code></pre>
-<p>무식하게 풀어봤다. language는 더하는 filter로 쓰고 그 다음부터는 제거하는 필터로 썼는데 로직은 맞으나 효율성테스트에서 전부 시간초과 뜨더라. 왠지 그럴 것 같았다. 이건 이런식으로 풀라는 문제 같지가 않았으니까. 요행은 없구나 싶었다.<br/>&nbsp;문자열로 두면 조건의 길이를 l, 지원자 정보의 총 길이를 t라고 했을 때 0:l ~ t-l:t까지 검사를 하므로, 심지어는 query식이 들어오는 갯수만큼 검색을 하므로 로직이 굉장히 비효율적이게 된다. 주어진 문자열 자료형을 따로 검색하기 좋게 만들어서 하는 수밖에 없겠구나 하는 생각이 들었다.</p>
-<p>그래서 개선해본다고 한 게 아래의 풀이였다.</p>
-<pre class="line-numbers"><code class='language-python' lang='python'>def solution(info, query):
-    answer = []
-    applicants = []
-    for personal in info:
-        divided = personal.split()
-        applicant = {
-            &#39;language&#39;: divided[0],
-            &#39;division&#39;: divided[1],
-            &#39;career&#39;: divided[2],
-            &#39;food&#39;: divided[3],
-            &#39;score&#39;: int(divided[4])
-        }
-        applicants.append(applicant)
-    for search in query:
-        search_query = search.split(&#39; and &#39;)
-        language = search_query[0]
-        division = search_query[1]
-        career = search_query[2]
-        food = search_query[3].split()[0]
-        score = int(search_query[3].split()[1])
-        filtered = []
-        for applicant in applicants:
-            if language == &#39;-&#39;:
-                filtered.append(applicant)
-            elif language == applicant[&#39;language&#39;]:
-                filtered.append(applicant)
-        for index, personal in enumerate(filtered):
-            if division != &#39;-&#39; and personal[&#39;division&#39;] != division:
-                filtered[index] = None
-            if career != &#39;-&#39; and personal[&#39;career&#39;] != career:
-                filtered[index] = None
-            if food != &#39;-&#39; and personal[&#39;food&#39;] != food:
-                filtered[index] = None
-            if score != &#39;-&#39; and personal[&#39;score&#39;] &lt; score:
-                filtered[index] = None
-        answer.append(len(list(filter(lambda x: x is not None, filtered))))
-    return answer
-</code></pre>
-<p>음, dict구조로 바꿔서 해당 key가 들어왔을 때 바로 검사를 진행해도 시간초과가 뜬다. 이때 느꼈다. 로직 자체를 내가 잘못생각했구나. 근데 내가 잘못생각한 건 알겠는데 뭘 어떻게 개선해야할지는 모르겠어가지고 다른사람들의 풀이를 참고했다. 그것이 맨 위, 풀이란에 적혀있는 코드이다.</p>
-<p>&nbsp;</p>
-<p>로직은 <a target="_blank" href='https://tech.kakao.com/2021/01/25/2021-kakao-recruitment-round-1/'>기술블로그</a>에 자세히 나와있다. 블로그에서도 말하듯이 내가 처음에 시도했던 방법, 조건이 추가될 때마다 검색하는 방법은 시간이 오래걸리니 다른방법을 강구하는게 맞았다. 특히 정답에서 요구하는 것이 합격한 사람의 정보가 아니라 숫자인것을 보면 말이다. 풀이를 보고 나니 모든게 명확해지는 현실.</p>
-<p>&nbsp;</p>
-<p>간단하게 말하자면 지원자들의 정보를 검색 옵션과 결부시켜 그 조건 안에 점수리스트를 담아둔 뒤 어떤 조건이 들어오면 그 점수리스트를 가져와서 이분탐색 후에 조건 점수보다 높은 갯수를 list에 담아서 반환하는 것이다. 점수만 비교하는 이유는 이쯤 되면 다 알겠지만 다른 건 문자열의 일치여부만 검사하면 되는데 숫자는 고저의 차이로 조건이 갈리기 때문이다.</p>
-<p>&nbsp;</p>
-<p>&nbsp;</p>
-<p>어쩌면 말로만 해서는 잘 이해가 안 갈 수도 있다. 그러니까 첫번째 참가자를 예로 들어보자.
-java backend junior pizza 150이라는 조건을 갖고 있다. 점수를 제외하고, 이사람이 걸리는 조건식은 몇개가 있을까? 바로 16개다. 어떻게 해서 16개가 되느냐</p>
-<figure><table>
-<thead>
-<tr><th style='text-align:left;' >언어</th><th style='text-align:left;' >직군</th><th style='text-align:left;' >경력</th><th style='text-align:left;' >소울 푸드</th><th style='text-align:left;' >점수</th></tr></thead>
-<tbody><tr><td style='text-align:left;' >java</td><td style='text-align:left;' >backend</td><td style='text-align:left;' >junior</td><td style='text-align:left;' >pizza</td><td style='text-align:left;' >150</td></tr><tr><td style='text-align:left;' >–</td><td style='text-align:left;' >backend</td><td style='text-align:left;' >junior</td><td style='text-align:left;' >pizza</td><td style='text-align:left;' >150</td></tr><tr><td style='text-align:left;' >java</td><td style='text-align:left;' >–</td><td style='text-align:left;' >junior</td><td style='text-align:left;' >pizza</td><td style='text-align:left;' >150</td></tr><tr><td style='text-align:left;' >java</td><td style='text-align:left;' >backend</td><td style='text-align:left;' >–</td><td style='text-align:left;' >pizza</td><td style='text-align:left;' >150</td></tr><tr><td style='text-align:left;' >java</td><td style='text-align:left;' >backend</td><td style='text-align:left;' >junior</td><td style='text-align:left;' >–</td><td style='text-align:left;' >150</td></tr><tr><td style='text-align:left;' >–</td><td style='text-align:left;' >–</td><td style='text-align:left;' >junior</td><td style='text-align:left;' >pizza</td><td style='text-align:left;' >150</td></tr><tr><td style='text-align:left;' >–</td><td style='text-align:left;' >backend</td><td style='text-align:left;' >–</td><td style='text-align:left;' >pizza</td><td style='text-align:left;' >150</td></tr><tr><td style='text-align:left;' >… (생략)</td><td style='text-align:left;' >&nbsp;</td><td style='text-align:left;' >&nbsp;</td><td style='text-align:left;' >&nbsp;</td><td style='text-align:left;' >&nbsp;</td></tr><tr><td style='text-align:left;' >java</td><td style='text-align:left;' >–</td><td style='text-align:left;' >–</td><td style='text-align:left;' >–</td><td style='text-align:left;' >150</td></tr><tr><td style='text-align:left;' >–</td><td style='text-align:left;' >–</td><td style='text-align:left;' >–</td><td style='text-align:left;' >–</td><td style='text-align:left;' >150</td></tr></tbody>
-</table></figure>
-<p>이런식으로 해서 총 16개가 된다. 조건 4개(언어, 직군, 경력, 소울 푸드)의 조합, 곧 4!이 되는 것이다. 이렇게 모든 지원자들의 점수를 &quot;조건식에 걸리는 형태&quot;로 바꿔서 list로 만들어준뒤 각 조건의 dict에 넣어준다. 이 작업을 완료하면</p>
-<pre class="line-numbers"><code class='language-python' lang='python'>applicants = {&#39;&#39;: [50, 80, 150, 150, 210, 260],
-              &#39;backend&#39;: [50, 80, 150, 260],
-              &#39;backendchicken&#39;: [50, 80],
-              &#39;backendjunior&#39;: [80, 150],
-              &#39;backendjuniorchicken&#39;: [80],
-              &#39;backendjuniorpizza&#39;: [150],
-              &#39;backendpizza&#39;: [150, 260],
-              &#39;backendsenior&#39;: [50, 260],
-              &#39;backendseniorchicken&#39;: [50],
-              &#39;backendseniorpizza&#39;: [260],
-              &#39;chicken&#39;: [50, 80, 150, 210],
-              &#39;cpp&#39;: [260],
-              &#39;cppbackend&#39;: [260],
-              &#39;cppbackendpizza&#39;: [260],
-              &#39;cppbackendsenior&#39;: [260],
-              &#39;cppbackendseniorpizza&#39;: [260],
-              &#39;cpppizza&#39;: [260],
-              &#39;cppsenior&#39;: [260],
-              &#39;cppseniorpizza&#39;: [260],
-              &#39;frontend&#39;: [150, 210],
-              &#39;frontendchicken&#39;: [150, 210],
-              &#39;frontendsenior&#39;: [150, 210],
-              &#39;frontendseniorchicken&#39;: [150, 210],
-              &#39;java&#39;: [80, 150],
-              &#39;javabackend&#39;: [80, 150],
-              &#39;javabackendchicken&#39;: [80],
-              &#39;javabackendjunior&#39;: [80, 150],
-              &#39;javabackendjuniorchicken&#39;: [80],
-              &#39;javabackendjuniorpizza&#39;: [150],
-              &#39;javabackendpizza&#39;: [150],
-              &#39;javachicken&#39;: [80],
-              &#39;javajunior&#39;: [80, 150],
-              &#39;javajuniorchicken&#39;: [80],
-              &#39;javajuniorpizza&#39;: [150],
-              &#39;javapizza&#39;: [150],
-              &#39;junior&#39;: [80, 150],
-              &#39;juniorchicken&#39;: [80],
-              &#39;juniorpizza&#39;: [150],
-              &#39;pizza&#39;: [150, 260],
-              &#39;python&#39;: [50, 150, 210],
-              &#39;pythonbackend&#39;: [50],
-              &#39;pythonbackendchicken&#39;: [50],
-              &#39;pythonbackendsenior&#39;: [50],
-              &#39;pythonbackendseniorchicken&#39;: [50],
-              &#39;pythonchicken&#39;: [50, 150, 210],
-              &#39;pythonfrontend&#39;: [150, 210],
-              &#39;pythonfrontendchicken&#39;: [150, 210],
-              &#39;pythonfrontendsenior&#39;: [150, 210],
-              &#39;pythonfrontendseniorchicken&#39;: [150, 210],
-              &#39;pythonsenior&#39;: [50, 150, 210],
-              &#39;pythonseniorchicken&#39;: [50, 150, 210],
-              &#39;senior&#39;: [50, 150, 210, 260],
-              &#39;seniorchicken&#39;: [50, 150, 210],
-              &#39;seniorpizza&#39;: [260]}
-</code></pre>
-<p>이런 형태가 된다. 여기까지 왔으면 거의 다 왔다. 이제 query에서 주어지는 조건들에서 &#39;-&#39;와 &#39;and&#39;를 지우고 그 key값으로 점수목록을 불러온 뒤 주어진 조건의 점수보다 더 큰 애들의 숫자를 세서 내보내면 된다.</p>
-<p>&nbsp;</p>
-<p>근데 여기에서도 또 함정이 있는게 그냥 무작위로 정렬된 점수를 전부 검색해서 높은애들만 카운팅하면 또 시간초과에 걸린다. 그래서 오름차순으로 정렬한 뒤 이분탐색하면서 주어진 점수와 일치하거나 점수들 사이에 들어갈 수 있는 자리를 찾으면 이분탐색을 종료하고 그 index를 총 길이에서 빼는 식으로 해야 한다. 그러면 당연히 그 index 뒤부터는 주어진 점수보다 클 게 뻔하니 조건에 맞는 지원자들의 수가 되기 때문이다.</p>
-<p>&nbsp;</p>
-<p>&nbsp;</p>
-<p>정말 오랜만에 이해도 어렵고 풀기도 어렵고 이분탐색도 하게 된 그런 문제였다. 재밌고 어려웠다.</p>
+<h4>설명 &amp; 후기</h4>
+<p>문제 지문에서 볼 수 있다시피 중복을 허용하는 다중집합에서의 자카드 유사도를 구하는 것이기 때문에 파이썬에서 제공하는 set 자료형으로 문제의 모든 요구사항에 맞출 수 없다. 그래서 문자열을 2글자씩 자른 요소들을 갖고 있는 list를 먼저 만들고 요리조리 조합하여 답을 구했다.<br/>&nbsp;밑에서 교집합 원소 개수와 차집합 원소 개수를 구하는 로직은 너무 깔끔해서 다른 사람의 로직에서 보고 가져왔다.</p>
