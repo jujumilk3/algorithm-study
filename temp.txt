@@ -1,49 +1,66 @@
-<h4>[프로그래머스/Level2/파이썬3(python3)] 뉴스 클러스터링</h4>
+<h4>[프로그래머스/Level1/파이썬3(python3)] 약수의 개수와 덧셈</h4>
 <h4>문제</h4>
-<p>여러 언론사에서 쏟아지는 뉴스, 특히 속보성 뉴스를 보면 비슷비슷한 제목의 기사가 많아 정작 필요한 기사를 찾기가 어렵다. Daum 뉴스의 개발 업무를 맡게 된 신입사원 튜브는 사용자들이 편리하게 다양한 뉴스를 찾아볼 수 있도록 문제점을 개선하는 업무를 맡게 되었다.</p>
-<p>개발의 방향을 잡기 위해 튜브는 우선 최근 화제가 되고 있는 &quot;카카오 신입 개발자 공채&quot; 관련 기사를 검색해보았다.</p><br/>
+<p>두 정수 <code class="inline">left</code>와 <code class="inline">right</code>가 매개변수로 주어집니다. <code class="inline">left</code>부터 <code class="inline">right</code>까지의 모든 수들 중에서, 약수의 개수가 짝수인 수는 더하고, 약수의 개수가 홀수인 수는 뺀 수를 return 하도록 solution 함수를 완성해주세요.</p>
+<h4><strong>제한사항</strong></h4>
 <ul>
-<li>카카오 첫 공채..&#39;블라인드&#39; 방식 채용</li>
-<li>카카오, 합병 후 첫 공채.. 블라인드 전형으로 개발자 채용</li>
-<li>카카오, 블라인드 전형으로 신입 개발자 공채</li>
-<li>카카오 공채, 신입 개발자 코딩 능력만 본다</li>
-<li>카카오, 신입 공채.. &quot;코딩 실력만 본다&quot;</li>
-<li>카카오 &quot;코딩 능력만으로 2018 신입 개발자 뽑는다&quot;</li>
+<li>1 ≤ <code class="inline">left</code> ≤ <code class="inline">right</code> ≤ 1,000</li>
 
 </ul>
-<p>기사의 제목을 기준으로 &quot;블라인드 전형&quot;에 주목하는 기사와 &quot;코딩 테스트&quot;에 주목하는 기사로 나뉘는 걸 발견했다. 튜브는 이들을 각각 묶어서 보여주면 카카오 공채 관련 기사를 찾아보는 사용자에게 유용할 듯싶었다.</p>
-<p>유사한 기사를 묶는 기준을 정하기 위해서 논문과 자료를 조사하던 튜브는 &quot;자카드 유사도&quot;라는 방법을 찾아냈다.</p>
-<p>자카드 유사도는 집합 간의 유사도를 검사하는 여러 방법 중의 하나로 알려져 있다. 두 집합 <code class="inline">A</code>, <code class="inline">B</code> 사이의 자카드 유사도 <code class="inline">J(A, B)</code>는 두 집합의 교집합 크기를 두 집합의 합집합 크기로 나눈 값으로 정의된다.</p>
-<p>예를 들어 집합 <code class="inline">A</code> = {1, 2, 3}, 집합 <code class="inline">B</code> = {2, 3, 4}라고 할 때, 교집합 <code class="inline">A ∩ B</code> = {2, 3}, 합집합 <code class="inline">A ∪ B</code> = {1, 2, 3, 4}이 되므로, 집합 <code class="inline">A</code>, <code class="inline">B</code> 사이의 자카드 유사도 <code class="inline">J(A, B)</code> = 2/4 = 0.5가 된다. 집합 A와 집합 B가 모두 공집합일 경우에는 나눗셈이 정의되지 않으니 따로 <code class="inline">J(A, B)</code> = 1로 정의한다.</p>
-<p>자카드 유사도는 원소의 중복을 허용하는 다중집합에 대해서 확장할 수 있다. 다중집합 <code class="inline">A</code>는 원소 &quot;1&quot;을 3개 가지고 있고, 다중집합 <code class="inline">B</code>는 원소 &quot;1&quot;을 5개 가지고 있다고 하자. 이 다중집합의 교집합 <code class="inline">A ∩ B</code>는 원소 &quot;1&quot;을 min(3, 5)인 3개, 합집합 <code class="inline">A ∪ B</code>는 원소 &quot;1&quot;을 max(3, 5)인 5개 가지게 된다. 다중집합 <code class="inline">A</code> = {1, 1, 2, 2, 3}, 다중집합 <code class="inline">B</code> = {1, 2, 2, 4, 5}라고 하면, 교집합 <code class="inline">A ∩ B</code> = {1, 2, 2}, 합집합 <code class="inline">A ∪ B</code> = {1, 1, 2, 2, 3, 4, 5}가 되므로, 자카드 유사도 <code class="inline">J(A, B)</code> = 3/7, 약 0.42가 된다.</p>
-<p>이를 이용하여 문자열 사이의 유사도를 계산하는데 이용할 수 있다. 문자열 &quot;FRANCE&quot;와 &quot;FRENCH&quot;가 주어졌을 때, 이를 두 글자씩 끊어서 다중집합을 만들 수 있다. 각각 {FR, RA, AN, NC, CE}, {FR, RE, EN, NC, CH}가 되며, 교집합은 {FR, NC}, 합집합은 {FR, RA, AN, NC, CE, RE, EN, CH}가 되므로, 두 문자열 사이의 자카드 유사도 <code class="inline">J(&quot;FRANCE&quot;, &quot;FRENCH&quot;)</code> = 2/8 = 0.25가 된다.</p>
-<h4>입력 형식</h4>
-<ul>
-<li>입력으로는 <code class="inline">str1</code>과 <code class="inline">str2</code>의 두 문자열이 들어온다. 각 문자열의 길이는 2 이상, 1,000 이하이다.</li>
-<li>입력으로 들어온 문자열은 두 글자씩 끊어서 다중집합의 원소로 만든다. 이때 영문자로 된 글자 쌍만 유효하고, 기타 공백이나 숫자, 특수 문자가 들어있는 경우는 그 글자 쌍을 버린다. 예를 들어 &quot;ab+&quot;가 입력으로 들어오면, &quot;ab&quot;만 다중집합의 원소로 삼고, &quot;b+&quot;는 버린다.</li>
-<li>다중집합 원소 사이를 비교할 때, 대문자와 소문자의 차이는 무시한다. &quot;AB&quot;와 &quot;Ab&quot;, &quot;ab&quot;는 같은 원소로 취급한다.</li>
-
-</ul>
-<h4>출력 형식</h4>
-<p>입력으로 들어온 두 문자열의 자카드 유사도를 출력한다. 유사도 값은 0에서 1 사이의 실수이므로, 이를 다루기 쉽도록 65536을 곱한 후에 소수점 아래를 버리고 정수부만 출력한다.</p>
 <h4>입출력 예</h4>
 <figure><table class="tg">
 <thead>
-<tr><th>str1</th><th>str2</th><th>answer</th></tr></thead>
-<tbody><tr><td>FRANCE</td><td>french</td><td>16384</td></tr><tr><td>handshake</td><td>shake hands</td><td>65536</td></tr><tr><td>aa1+aa2</td><td>AAAA12</td><td>43690</td></tr><tr><td>E=M*C^2</td><td>e=m*c^2</td><td>65536</td></tr></tbody>
+<tr><th>left</th><th>right</th><th>result</th></tr></thead>
+<tbody><tr><td>13</td><td>17</td><td>43</td></tr><tr><td>24</td><td>27</td><td>52</td></tr></tbody>
 </table></figure>
+<h4>입출력 예에 대한 설명</h4>
+<ul>
+<li><p><strong>입출력 예 #1</strong></p>
+<ul>
+<li>다음 표는 13부터 17까지의 수들의 약수를 모두 나타낸 것입니다.</li>
+
+</ul>
+<figure><table class="tg">
+<thead>
+<tr><th>수</th><th>약수</th><th>약수의 개수</th></tr></thead>
+<tbody><tr><td>13</td><td>1, 13</td><td>2</td></tr><tr><td>14</td><td>1, 2, 7, 14</td><td>4</td></tr><tr><td>15</td><td>1, 3, 5, 15</td><td>4</td></tr><tr><td>16</td><td>1, 2, 4, 8, 16</td><td>5</td></tr><tr><td>17</td><td>1, 17</td><td>2</td></tr></tbody>
+</table></figure>
+<ul>
+<li>따라서, 13 + 14 + 15 - 16 + 17 = 43을 return 해야 합니다.</li>
+
+</ul>
+</li>
+<li><p><strong>입출력 예 #2</strong></p>
+<ul>
+<li>다음 표는 24부터 27까지의 수들의 약수를 모두 나타낸 것입니다.</li>
+
+</ul>
+<figure><table class="tg">
+<thead>
+<tr><th>수</th><th>약수</th><th>약수의 개수</th></tr></thead>
+<tbody><tr><td>24</td><td>1, 2, 3, 4, 6, 8, 12, 24</td><td>8</td></tr><tr><td>25</td><td>1, 5, 25</td><td>3</td></tr><tr><td>26</td><td>1, 2, 13, 26</td><td>4</td></tr><tr><td>27</td><td>1, 3, 9, 27</td><td>4</td></tr></tbody>
+</table></figure>
+<ul>
+<li>따라서, 24 - 25 + 26 + 27 = 52를 return 해야 합니다.</li>
+
+</ul>
+</li>
+
+</ul>
 <h4>풀이</h4>
-<pre class="line-numbers"><code class='language-python' lang='python'>def solution(str1, str2):
-    str1_pairs = [str1[i:i+2].upper() for i in range(len(str1)-1) if str1[i:i+2].isalpha()]
-    str2_pairs = [str2[i:i+2].upper() for i in range(len(str2)-1) if str2[i:i+2].isalpha()]
-    inter = set(str1_pairs) &amp; set(str2_pairs)
-    union = set(str1_pairs) | set(str2_pairs)
-    if not union:
-        return 65536
-    else:
-        inter_sum = sum([min(str1_pairs.count(pair), str2_pairs.count(pair)) for pair in inter])
-        union_sum = sum([max(str1_pairs.count(pair), str2_pairs.count(pair)) for pair in union])
-        return int((inter_sum / union_sum) * 65536)
+<pre class="line-numbers"><code class='language-python' lang='python'>def solution(left, right):
+    answer = 0
+    for i in range(left, right+1):
+        divisors_list = []
+        for j in range(1, i+1):
+            if i % j == 0:
+                divisors_list.append(j)
+        if len(divisors_list) % 2 == 0:
+            answer += i
+        else:
+            answer -= i
+    return answer
+
 </code></pre>
-<h4>설명 &amp; 후기</h4>
-<p>문제 지문에서 볼 수 있다시피 중복을 허용하는 다중집합에서의 자카드 유사도를 구하는 것이기 때문에 파이썬에서 제공하는 set 자료형으로 문제의 모든 요구사항에 맞출 수 없다. 그래서 문자열을 2글자씩 자른 요소들을 갖고 있는 list를 먼저 만들고 요리조리 조합하여 답을 구했다.<br/>&nbsp;밑에서 교집합 원소 개수와 차집합 원소 개수를 구하는 로직은 너무 깔끔해서 다른 사람의 로직에서 보고 가져왔다.</p>
+<h4>설명</h4>
+<p>나는 그냥 설명에서 나온 그대로 코딩했는데 다른 사람의 풀이를 보니 제곱수(1, 4, 9, 16...)의 성질을 이용한 사람들이 많았다. &quot;제곱수의 약수의 개수는 홀수이고 제곱수가 아닌 경우는 짝수&quot;라는 성질이 있는데 이걸 이용해 약수의 개수를 구하는 단계에서 해당 수가 제곱수인지 아닌지 검사하는 로직을 통해 더하거나 빼는 방식이 있다.</p>
+<p>&nbsp;</p>
