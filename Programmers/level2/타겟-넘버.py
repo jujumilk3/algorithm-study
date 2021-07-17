@@ -1,9 +1,12 @@
 def solution(numbers, target):
-    answer = 0
-    return answer
+    sup = [0]
+    for i in numbers:
+        sub = []
+        for j in sup:
+            sub.append(j+i)
+            sub.append(j-i)
+        sup = sub
+    return sup.count(target)
 
 
-# print(solution([1, 1, 1, 1, 1], 3))
-# print(solution([1, 1, 1, 1, 1, 1], 4))
-# print(solution([2, 4, 2, 4, 2, 4], 6))
-print(solution([1, 2, 3, 4, 5], 6))
+print(solution([1, 1, 1, 1, 1], 3))
