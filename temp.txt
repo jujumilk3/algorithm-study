@@ -1,92 +1,38 @@
-<h4>[프로그래머스/Level1/파이썬3(python3)] 로또의 최고 순위와 최저 순위</h4>
+<h4>[프로그래머스/Level2/파이썬3(python3)] 예상 대진표</h4>
 <h4>문제</h4>
-<p><code class="inline">로또 6/45</code>(이하 &#39;로또&#39;로 표기)는 1부터 45까지의 숫자 중 6개를 찍어서 맞히는 대표적인 복권입니다. 아래는 로또의 순위를 정하는 방식입니다. <a href='https://programmers.co.kr/learn/courses/30/lessons/77484#fn1'>1</a></p>
-<figure><table class="tg">
-<thead>
-<tr><th>순위</th><th>당첨 내용</th></tr></thead>
-<tbody><tr><td>1</td><td>6개 번호가 모두 일치</td></tr><tr><td>2</td><td>5개 번호가 일치</td></tr><tr><td>3</td><td>4개 번호가 일치</td></tr><tr><td>4</td><td>3개 번호가 일치</td></tr><tr><td>5</td><td>2개 번호가 일치</td></tr><tr><td>6(낙첨)</td><td>그 외</td></tr></tbody>
-</table></figure>
-<p>로또를 구매한 민우는 당첨 번호 발표일을 학수고대하고 있었습니다. 하지만, 민우의 동생이 로또에 낙서를 하여, 일부 번호를 알아볼 수 없게 되었습니다. 당첨 번호 발표 후, 민우는 자신이 구매했던 로또로 당첨이 가능했던 최고 순위와 최저 순위를 알아보고 싶어 졌습니다.
-알아볼 수 없는 번호를 <code class="inline">0</code>으로 표기하기로 하고, 민우가 구매한 로또 번호 6개가 <code class="inline">44, 1, 0, 0, 31 25</code>라고 가정해보겠습니다. 당첨 번호 6개가 <code class="inline">31, 10, 45, 1, 6, 19</code>라면, 당첨 가능한 최고 순위와 최저 순위의 한 예는 아래와 같습니다.</p>
-<figure><table class="tg">
-<thead>
-<tr><th>당첨 번호</th><th>31</th><th>10</th><th>45</th><th>1</th><th>6</th><th>19</th><th>결과</th></tr></thead>
-<tbody><tr><td>최고 순위 번호</td><td><strong>31</strong></td><td>0→<strong>10</strong></td><td>44</td><td><strong>1</strong></td><td>0→<strong>6</strong></td><td>25</td><td>4개 번호 일치, 3등</td></tr><tr><td>최저 순위 번호</td><td><strong>31</strong></td><td>0→11</td><td>44</td><td><strong>1</strong></td><td>0→7</td><td>25</td><td>2개 번호 일치, 5등</td></tr></tbody>
-</table></figure>
+<p>△△ 게임대회가 개최되었습니다. 이 대회는 N명이 참가하고, 토너먼트 형식으로 진행됩니다. N명의 참가자는 각각 1부터 N번을 차례대로 배정받습니다. 그리고, 1번↔2번, 3번↔4번, ... , N-1번↔N번의 참가자끼리 게임을 진행합니다. 각 게임에서 이긴 사람은 다음 라운드에 진출할 수 있습니다. 이때, 다음 라운드에 진출할 참가자의 번호는 다시 1번부터 N/2번을 차례대로 배정받습니다. 만약 1번↔2번 끼리 겨루는 게임에서 2번이 승리했다면 다음 라운드에서 1번을 부여받고, 3번↔4번에서 겨루는 게임에서 3번이 승리했다면 다음 라운드에서 2번을 부여받게 됩니다. 게임은 최종 한 명이 남을 때까지 진행됩니다.</p>
+<p>이때, 처음 라운드에서 A번을 가진 참가자는 경쟁자로 생각하는 B번 참가자와 몇 번째 라운드에서 만나는지 궁금해졌습니다. 게임 참가자 수 N, 참가자 번호 A, 경쟁자 번호 B가 함수 solution의 매개변수로 주어질 때, 처음 라운드에서 A번을 가진 참가자는 경쟁자로 생각하는 B번 참가자와 몇 번째 라운드에서 만나는지 return 하는 solution 함수를 완성해 주세요. <strong>단, A번 참가자와 B번 참가자는 서로 붙게 되기 전까지 항상 이긴다고 가정합니다.</strong></p>
+<h4>제한사항</h4>
 <ul>
-<li><p>순서와 상관없이, 구매한 로또에 당첨 번호와 일치하는 번호가 있으면 맞힌 걸로 인정됩니다.</p>
-</li>
-<li><p>알아볼 수 없는 두 개의 번호를 각각 10, 6이라고 가정하면 3등에 당첨될 수 있습니다.</p>
-<ul>
-<li>3등을 만드는 다른 방법들도 존재합니다. 하지만, 2등 이상으로 만드는 것은 불가능합니다.</li>
-
-</ul>
-</li>
-<li><p>알아볼 수 없는 두 개의 번호를 각각 11, 7이라고 가정하면 5등에 당첨될 수 있습니다.</p>
-<ul>
-<li>5등을 만드는 다른 방법들도 존재합니다. 하지만, 6등(낙첨)으로 만드는 것은 불가능합니다.</li>
-
-</ul>
-</li>
-
-</ul>
-<p>민우가 구매한 로또 번호를 담은 배열 lottos, 당첨 번호를 담은 배열 win_nums가 매개변수로 주어집니다. 이때, 당첨 가능한 최고 순위와 최저 순위를 차례대로 배열에 담아서 return 하도록 solution 함수를 완성해주세요.</p>
-<h4><strong>제한사항</strong></h4>
-<ul>
-<li><p>lottos는 길이 6인 정수 배열입니다.</p>
-</li>
-<li><p>lottos의 모든 원소는 0 이상 45 이하인 정수입니다.</p>
-<ul>
-<li>0은 알아볼 수 없는 숫자를 의미합니다.</li>
-<li>0을 제외한 다른 숫자들은 lottos에 2개 이상 담겨있지 않습니다.</li>
-<li>lottos의 원소들은 정렬되어 있지 않을 수도 있습니다.</li>
-
-</ul>
-</li>
-<li><p>win_nums은 길이 6인 정수 배열입니다.</p>
-</li>
-<li><p>win_nums의 모든 원소는 1 이상 45 이하인 정수입니다.</p>
-<ul>
-<li>win_nums에는 같은 숫자가 2개 이상 담겨있지 않습니다.</li>
-<li>win_nums의 원소들은 정렬되어 있지 않을 수도 있습니다.</li>
-
-</ul>
-</li>
+<li>N : 21 이상 220 이하인 자연수 (2의 지수 승으로 주어지므로 부전승은 발생하지 않습니다.)</li>
+<li>A, B : N 이하인 자연수 (단, A ≠ B 입니다.)</li>
 
 </ul>
 <h4>입출력 예</h4>
 <figure><table class="tg">
 <thead>
-<tr><th>lottos</th><th>win_nums</th><th>result</th></tr></thead>
-<tbody><tr><td>[44, 1, 0, 0, 31, 25]</td><td>[31, 10, 45, 1, 6, 19]</td><td>[3, 5]</td></tr><tr><td>[0, 0, 0, 0, 0, 0]</td><td>[38, 19, 20, 40, 15, 25]</td><td>[1, 6]</td></tr><tr><td>[45, 4, 35, 20, 3, 9]</td><td>[20, 9, 3, 45, 4, 35]</td><td>[1, 1]</td></tr></tbody>
+<tr><th>N</th><th>A</th><th>B</th><th>answer</th></tr></thead>
+<tbody><tr><td>8</td><td>4</td><td>7</td><td>3</td></tr></tbody>
 </table></figure>
 <h4>입출력 예에 대한 설명</h4>
 <p>입출력 예 #1
-문제 예시와 같습니다.</p>
-<p>입출력 예 #2
-알아볼 수 없는 번호들이 아래와 같았다면, 1등과 6등에 당첨될 수 있습니다.</p>
-<figure><table class="tg">
-<thead>
-<tr><th>당첨 번호</th><th>20</th><th>9</th><th>3</th><th>45</th><th>4</th><th>35</th><th>결과</th></tr></thead>
-<tbody><tr><td>최고 순위 번호</td><td>0→<strong>20</strong></td><td>0→<strong>9</strong></td><td>0→<strong>3</strong></td><td>0→<strong>45</strong></td><td>0→<strong>4</strong></td><td>0→<strong>35</strong></td><td>6개 번호 일치, 1등</td></tr><tr><td>최저 순위 번호</td><td>0→21</td><td>0→22</td><td>0→23</td><td>0→24</td><td>0→25</td><td>0→26</td><td>0개 번호 일치, 6등</td></tr></tbody>
-</table></figure>
-<p>입출력 예 #3
-민우가 구매한 로또의 번호와 당첨 번호가 모두 일치하므로, 최고 순위와 최저 순위는 모두 1등입니다.</p>
+첫 번째 라운드에서 4번 참가자는 3번 참가자와 붙게 되고, 7번 참가자는 8번 참가자와 붙게 됩니다. 항상 이긴다고 가정했으므로 4번 참가자는 다음 라운드에서 2번이 되고, 7번 참가자는 4번이 됩니다. 두 번째 라운드에서 2번은 1번과 붙게 되고, 4번은 3번과 붙게 됩니다. 항상 이긴다고 가정했으므로 2번은 다음 라운드에서 1번이 되고, 4번은 2번이 됩니다. 세 번째 라운드에서 1번과 2번으로 두 참가자가 붙게 되므로 3을 return 하면 됩니다.</p>
 <h4>풀이</h4>
-<pre><code class='language-python' lang='python'>def solution(lottos, win_nums):
-    zero_count = 0
-    match_count = 0
-    for lotto_number in lottos:
-        if lotto_number == 0:
-            zero_count += 1
-        for win_num in win_nums:
-            if lotto_number == win_num and lotto_number != 0:
-                match_count += 1
-    best_reward = 7 - (zero_count + match_count)
-    worst_reward = 7 - match_count
-    worst_reward = 6 if worst_reward &gt; 6 else worst_reward
-    best_reward = 6 if best_reward &gt; 6 else best_reward
-    return [best_reward, worst_reward]
+<pre class="line-numbers"><code class='language-python' lang='python'>from math import ceil
+
+
+def solution(n, a, b):
+    answer = 1
+    if b &lt; a:
+        a, b = b, a
+    while n &gt; 2:
+        if a - b == -1 and a % 2 != 0:
+            break
+        a = ceil(a/2)
+        b = ceil(b/2)
+        n = n // 2
+        answer += 1
+    return answer
 </code></pre>
 <h4>설명</h4>
-<p>&nbsp;</p>
+<p>참가번호를 entry라고 정의했을 때 각 entry는 다음 라운드에 진행될 때마다 <code class="inline">ceil(entry/2)</code>라는 entry를 새로 갖는다. 라운드가 진행되면서 a와 b의 entry를 계속 추적하는데 이들이 같은 라운드에서 붙게 되거나 혹은 결승까지 진행됐을 때 반복문을 종료시키는 식으로 코드를 작성하였다. a가 b보다 빠른 엔트리에 작성돼있어야만 둘이 같은 라운드에서 붙는지 검사하는 조건문(if어쩌구)에 충족되므로 맨 처음의 조건문을 통해 a가 무조건 b의 entry보다 작은 수를 가질 수 있게 조절하였다. 만약에 실세계에 이 코드를 대입한다면 a와 b의 entry가 바뀔 가능성이 있으니 진짜 그냥 문제의 용도(몇 번 라운드에 붙는지)로만 쓸 수 있는 코드라고 할 수 있다.</p>
