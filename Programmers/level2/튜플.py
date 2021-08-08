@@ -1,16 +1,14 @@
 def solution(s):
     answer = []
-    complete_nums = []
-    number = ''
-    for char in s:
-        if char.isdigit():
-            number += char
-        elif number:
-            if int(number) not in complete_nums:
-                complete_nums.append(int(number))
-            number = ''
-    print(complete_nums)
-    return {*complete_nums}
+    as_lists = s[2:-2].split('},{')
+    as_lists.sort(key=len)
+    for as_string_list in as_lists:
+        as_list = as_string_list.split(',')
+        for number in as_list:
+            integer = int(number)
+            if integer not in answer:
+                answer.append(integer)
+    return answer
 
 
 print(solution("{{2},{2,1},{2,1,3},{2,1,3,4}}"))
