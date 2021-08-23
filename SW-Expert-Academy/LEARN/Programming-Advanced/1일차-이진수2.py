@@ -13,5 +13,6 @@ for t in range(case_count):
                 break
         else:
             answer += '0'
-    if number: answer = 'overflow'
+    if number:
+        answer = 'overflow'
     print('#{} {}'.format(t+1, answer))
