@@ -1,5 +1,9 @@
-def solution(m, n, board):
+def solution(col, row, board):
     answer = 0
+    for y in range(col):
+        print(board[y])
+        # for x in range(row):
+        #     print(board[y][x])
     return answer
 
 
