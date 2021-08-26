@@ -1,87 +1,70 @@
-<h4>[프로그래머스/Level1/파이썬3(python3)] 직업군 추천하기</h4>
+<h4>[SWEA/2007/파이썬3(python3)] 패턴 마디의 길이</h4>
 <h4>문제</h4>
-<p>개발자가 사용하는 언어와 <code class="inline">언어 선호도</code>를 입력하면 그에 맞는 직업군을 추천해주는 알고리즘을 개발하려고 합니다.</p>
-<p>아래 표는 5개 직업군 별로 많이 사용하는 5개 언어에 <code class="inline">직업군 언어 점수</code>를 부여한 표입니다.</p>
-<figure><table class="tg">
-<thead>
-<tr><th>점수</th><th>SI</th><th>CONTENTS</th><th>HARDWARE</th><th>PORTAL</th><th>GAME</th></tr></thead>
-<tbody><tr><td>5</td><td>JAVA</td><td>JAVASCRIPT</td><td>C</td><td>JAVA</td><td>C++</td></tr><tr><td>4</td><td>JAVASCRIPT</td><td>JAVA</td><td>C++</td><td>JAVASCRIPT</td><td>C#</td></tr><tr><td>3</td><td>SQL</td><td>PYTHON</td><td>PYTHON</td><td>PYTHON</td><td>JAVASCRIPT</td></tr><tr><td>2</td><td>PYTHON</td><td>SQL</td><td>JAVA</td><td>KOTLIN</td><td>C</td></tr><tr><td>1</td><td>C#</td><td>C++</td><td>JAVASCRIPT</td><td>PHP</td><td>JAVA</td></tr></tbody>
-</table></figure>
-<p>예를 들면, SQL의 SI <code class="inline">직업군 언어 점수</code>는 3점이지만 CONTENTS <code class="inline">직업군 언어 점수</code>는 2점입니다. SQL의 HARDWARE, PORTAL, GAME <code class="inline">직업군 언어 점수</code>는 0점입니다.</p>
-<p><code class="inline">직업군 언어 점수</code>를 정리한 문자열 배열 <code class="inline">table</code>, 개발자가 사용하는 언어를 담은 문자열 배열 <code class="inline">languages</code>, <code class="inline">언어 선호도</code>를 담은 정수 배열 <code class="inline">preference</code>가 매개변수로 주어집니다. 개발자가 사용하는 언어의 <code class="inline">언어 선호도</code> x <code class="inline">직업군 언어 점수</code>의 총합이 가장 높은 직업군을 return 하도록 solution 함수를 완성해주세요. 총합이 같은 직업군이 여러 개일 경우, 이름이 사전 순으로 가장 빠른 직업군을 return 해주세요.</p>
+<p>패턴에서 반복되는 부분을 마디라고 부른다. 문자열을 입력 받아 마디의 길이를 출력하는 프로그램을 작성하라.</p>
 <h4>제한사항</h4>
 <ul>
-<li><p><code class="inline">table</code>의 길이 = 5</p>
-<ul>
-<li><code class="inline">table</code>의 원소는 <code class="inline">&quot;직업군 5점언어 4점언어 3점언어 2점언어 1점언어&quot;</code>형식의 문자열입니다. <code class="inline">직업군</code>, <code class="inline">5점언어</code>, <code class="inline">4언어</code>, <code class="inline">3점언어</code>, <code class="inline">2점언어</code>, <code class="inline">1점언어</code>는 하나의 공백으로 구분되어 있습니다.</li>
-<li><code class="inline">table</code>은 모든 테스트케이스에서 동일합니다.</li>
+<li>각 문자열의 길이는 30이다. 마디의 최대 길이는 10이다.</li>
 
 </ul>
-</li>
-<li><p>1 ≤<code class="inline">languages</code>의 길이 ≤ 9</p>
-<ul>
-<li><code class="inline">languages</code>의 원소는 <code class="inline">&quot;JAVA&quot;</code>, <code class="inline">&quot;JAVASCRIPT&quot;</code>, <code class="inline">&quot;C&quot;</code>, <code class="inline">&quot;C++&quot;</code> ,<code class="inline">&quot;C#&quot;</code> , <code class="inline">&quot;SQL&quot;</code>, <code class="inline">&quot;PYTHON&quot;</code>, <code class="inline">&quot;KOTLIN&quot;</code>, <code class="inline">&quot;PHP&quot;</code> 중 한 개 이상으로 이루어져 있습니다.</li>
-<li><code class="inline">languages</code>의 원소는 중복되지 않습니다.</li>
-
-</ul>
-</li>
-<li><p><code class="inline">preference</code>의 길이 = <code class="inline">languages</code>의 길이</p>
-<ul>
-<li>1 ≤ <code class="inline">preference</code>의 원소 ≤ 10</li>
-
-</ul>
-</li>
-<li><p><code class="inline">preference</code>의 i번째 원소는 <code class="inline">languages</code>의 i번째 원소의 <code class="inline">언어 선호도</code>입니다.</p>
-</li>
-<li><p>return 할 문자열은 <code class="inline">&quot;SI&quot;</code>, <code class="inline">&quot;CONTENTS&quot;</code>, <code class="inline">&quot;HARDWARE&quot;</code>, <code class="inline">&quot;PORTAL&quot;</code>, <code class="inline">&quot;GAME&quot;</code> 중 하나입니다.</p>
-</li>
-
-</ul>
-<h4>입출력 예</h4>
-<figure><table class="tg">
-<thead>
-<tr><th>table</th><th>languages</th><th>preference</th><th>result</th></tr></thead>
-<tbody><tr><td><code class="inline">[&quot;SI JAVA JAVASCRIPT SQL PYTHON C#&quot;, &quot;CONTENTS JAVASCRIPT JAVA PYTHON SQL C++&quot;, &quot;HARDWARE C C++ PYTHON JAVA JAVASCRIPT&quot;, &quot;PORTAL JAVA JAVASCRIPT PYTHON KOTLIN PHP&quot;, &quot;GAME C++ C# JAVASCRIPT C JAVA&quot;]</code></td><td><code class="inline">[&quot;PYTHON&quot;, &quot;C++&quot;, &quot;SQL&quot;]</code></td><td>[7, 5, 5]</td><td><code class="inline">&quot;HARDWARE&quot;</code></td></tr><tr><td><code class="inline">[&quot;SI JAVA JAVASCRIPT SQL PYTHON C#&quot;, &quot;CONTENTS JAVASCRIPT JAVA PYTHON SQL C++&quot;, &quot;HARDWARE C C++ PYTHON JAVA JAVASCRIPT&quot;, &quot;PORTAL JAVA JAVASCRIPT PYTHON KOTLIN PHP&quot;, &quot;GAME C++ C# JAVASCRIPT C JAVA&quot;]</code></td><td><code class="inline">[&quot;JAVA&quot;, &quot;JAVASCRIPT&quot;]</code></td><td>[7, 5]</td><td><code class="inline">&quot;PORTAL&quot;</code></td></tr></tbody>
-</table></figure>
-<h4>입출력 예 설명</h4>
-<p><strong>입출력 예 #1</strong></p>
-<p>각 직업군 별로 점수를 계산해보면 아래와 같습니다.</p>
-<p>아래 사진은 <code class="inline">개발자 언어 선호도</code> 나타낸 표입니다.</p>
-<p><img style="width:100%" src='https://grepp-programmers.s3.ap-northeast-2.amazonaws.com/files/production/9a711ad6-4a8e-4028-b100-0280a4e3a7dd/tc1_preference.PNG' alt='tc1_preference.PNG' referrerPolicy='no-referrer' /></p>
-<p>아래 사진은 개발자가 선호하는 언어의 <code class="inline">직업군 언어 점수</code>를 나타낸 표입니다.</p>
-<p><img style="width:100%" src='https://grepp-programmers.s3.ap-northeast-2.amazonaws.com/files/production/1ef5a88a-8109-415d-b611-a6320410b1e1/tc1_score.PNG' alt='tc1_score.PNG' referrerPolicy='no-referrer' /></p>
-<p>따라서 점수 총합이 41로 가장 높은 <code class="inline">&quot;HARDWARE&quot;</code>를 return 해야 합니다.</p>
-<p><strong>입출력 예 #2</strong></p>
-<p>각 직업군 별로 점수를 계산해보면 아래와 같습니다.</p>
-<p>아래 사진은 <code class="inline">개발자 언어 선호도</code> 나타낸 표입니다.</p>
-<p><img style="width:100%" src='https://grepp-programmers.s3.ap-northeast-2.amazonaws.com/files/production/e49d818b-938a-4cc3-8d2a-27783f2e1af5/tc2_preference.PNG' alt='tc2_preference.PNG' referrerPolicy='no-referrer' /></p>
-<p>아래 사진은 개발자가 선호하는 언어의 <code class="inline">직업군 언어 점수</code>를 나타낸 표입니다.</p>
-<p><img style="width:100%" src='https://grepp-programmers.s3.ap-northeast-2.amazonaws.com/files/production/0624156e-e1d3-4299-b554-470815322a79/tc2_score.PNG' alt='tc2_score.PNG' referrerPolicy='no-referrer' />
-점수 총합이 55로 가장 높은 직업군은 &quot;SI&quot; 와 &quot;PORTAL&quot;입니다.
-따라서 사전 순으로 먼저 오는 <code class="inline">&quot;PORTAL&quot;</code>을 return 해야 합니다.</p>
+<h4>입력</h4>
+<p>가장 첫 줄에는 테스트 케이스의 개수 T가 주어지고, 그 아래로 각 테스트 케이스가 주어진다.</p>
+<p>각 테스트 케이스의 첫 번째 줄에는 길이가 30인 문자열이 주어진다.</p>
+<pre><code>3
+KOREAKOREAKOREAKOREAKOREAKOREA
+SAMSUNGSAMSUNGSAMSUNGSAMSUNGSA
+GALAXYGALAXYGALAXYGALAXYGALAXY
+</code></pre>
+<h4>출력</h4>
+<p>출력의 각 줄은 &#39;#t&#39;로 시작하고, 공백을 한 칸 둔 다음 정답을 출력한다.</p>
+<p>(t는 테스트 케이스의 번호를 의미하며 1부터 시작한다.)  </p>
+<pre><code>#1 5
+#2 7
+#3 6
+</code></pre>
 <h4>풀이</h4>
-<pre class="line-numbers"><code class='language-python' lang='python'>def solution(table, languages, preference):
-    lang_score_dict = {}
-    for lang, score in zip(languages, preference):
-        lang_score_dict[lang] = score
-    scores = []
+<pre class="line-numbers"><code class='language-python' lang='python'>case_count = int(input())
 
-    for record in table:
-        split = record.split()
-        sum_score = 0
-        for lang in languages:
-            if lang in split:
-                score = 6 - split.index(lang)
-                sum_score += score * lang_score_dict[lang]
-                print(lang, score)
-        scores.append(sum_score)
-
-    top_cats = []
-    for index, score in enumerate(scores):
-        if score == max(scores):
-            top_cats.append(table[index].split()[0])
-    top_cats.sort()
-    return top_cats[0]
+for i in range(1, case_count + 1):
+    string = input()
+    word = &#39;&#39;
+    for char in string:
+        word += char
+        length = len(word)
+        if word == string[length:length+length]:
+            break
+    print(&#39;#{} {}&#39;.format(i, len(word)))
 </code></pre>
 <h4>설명</h4>
-<p>어질어질 복잡하고 긴 문제 설명에 겁먹을 필요가 없는 아주 단순한 문제이다. Table의 한 Record를 분리해보면 <code class="inline">&quot;SI JAVA JAVASCRIPT SQL PYTHON C#&quot;</code>이런 모양이 되는데 한 개의 직업군에 다섯개의 언어라는 고정된 형태가 있어 차례대로 앞으로 5, 4, 3, 2, 1점이라고 생각하면 된다. 이것은 위 풀이 내에서 <code class="inline">score = 6 <span style='font-family:"Open Sans", "Clear Sans", "Helvetica Neue", Helvetica, Arial, sans-serif'>-</span> split.index(lang)</code>로 표현되었다.<br/>&nbsp;만약에 해당 직업군의 언어에 매개변수로 주어진 언어가 포함돼있다면 <code class="inline">Record순서에 의한 점수 * 매개변수 preference로 주어진 점수</code>를 전부 더하면 해당 직업군에 대한 언어 선호도가 된다. 이것을 전부 저장해놨다가 제일 큰 점수에 해당하는 직업군을 반환해주면 된다.<br/>&nbsp;주의할 것은 예제 2에서 주어진 case인데 동일한 점수를 가진 직업군이 2개 이상이라면 사전순서로 먼저 오는 직업군을 리턴한다는 것이다.</p>
+<p>또 설명을 대충 읽는다는 안좋은 버릇을 버리지 못하고 풀었는데 뭔가 잘못된 풀이임에도 불구하고 정답처리가 된 데다가 오히려 괜찮아보이는 코드가 나와서 기념으로 기록해두려 한다. 일단 다른 사람들의 풀이방식은 이렇다. 주어지는 각 문자열의 길이는 30이고 마디의 최대 길이는 10이니 마디의 최대길이인 10까지의 단어를 추적한 뒤에 남은 문자열들이 이 단어의 반복인지 검사하는 형태이다. 나는 이 10자라는 제약조건을 또 그냥  띄엄띄엄보고 넘겨서... 마디도, 문자열도 그 길이에 제한이 없다고 가정하여 코드를 짰다. 또 안좋은 버릇이 나온 것이다.</p>
+<p>&nbsp;</p>
+<p>최대길이가 정해지지 않은 패턴을 어떻게 문자열에서 찾을 수 있을까 고민해봤는데 같은 길이의 문자열을 계속해서 추적해나갔을 때 일치하는 단어가 오는 순간이 바로 이 단어가 패턴이라는 것이 판명 되는 부분이다. 예를 들어 첫번째 예제인 KOREA로 예를 들어보자.</p>
+<p>&nbsp;</p>
+<ol>
+<li>패턴이 1글자일 경우
+조사할 단어가 K이고 그 뒤에 바로 O가 와서 패턴이 아니다.</li>
+<li>패턴이 2글자일 경우
+조사할 단어가 KO이고 그 뒤에 RE가 와서 패턴이 아니다.</li>
+<li>......</li>
+<li>패턴이 5글자일 경우
+조사할 단어가 KOREA이고 그 뒤에 KOREA가 와서 두 개가 일치하므로 패턴은 KOREA이다.</li>
+
+</ol>
+<p>&nbsp;</p>
+<p>그렇게 5를 리턴한다. 는 식으로 코드를 짰고 정답처리가 됐지만 이건 틀린 알고리즘이다. 왜냐. 알파벳이 반복되는 단어가 있다면 쉽게 무너지는 알고리즘이기 때문이다. 예를 들어 MMORPG라는 패턴으로 입력값이 들어왔다면 논리상 6이 리턴돼야 맞지만 위 코드로는 1이 리턴된다. 문제는 저 코드가 정답처리된다는 것이다. 그래서 수정한 것이 아래의 코드이다.</p>
+<p>&nbsp;</p>
+<pre class="line-numbers"><code class='language-python' lang='python'>for i in range(1, case_count + 1):
+    string = input()
+    word = &#39;&#39;
+    for char in string:
+        word += char
+        length = len(word)
+        if word == string[length:length+length]:
+            rest_string = string[length:]
+            rest_string = rest_string.replace(word, &#39;&#39;)
+            if len(rest_string) &lt; len(word):
+                break
+    print(&#39;#{} {}&#39;.format(i, len(word)))
+</code></pre>
+<p>위에서 말했던 과정을 통해 패턴을 찾았다고 판단됐을 때 그 패턴을 문자열에서 전부 지워버리면 아무리 글자가 많이 남아도 패턴만큼의 글자가 남지 않아야 올바른 패턴이라고 할 수 있다. 두번째 예제인 <code class="inline">SAMSUNGSAMSUNGSAMSUNGSAMSUNGSA</code>에서 확인해볼 수 있듯이 <code class="inline">SAMSUNG</code>이라는 글자를 전부 지워도 <code class="inline">SA</code>라는 자투리가 남는다는 것을 확인할 수 있다. 이런식으로 하면 <code class="inline">KKKKKAAAAAKKKKKAAAAAKKKKKAAAAA</code>나 <code class="inline">MMORPGMMORPGMMORPGMMORPGMMORPG</code>라는 예제에 대해서도 정확한 패턴의 길이인 10과 6을 반환한다는 것을 확인해볼 수 있다.</p>
+<p>&nbsp;</p>
+<p>문제 설명이 애매하고 정답처리가 너무 널널해서 오히려 상상력을 자극하는 좋은 문제였다.</p>
