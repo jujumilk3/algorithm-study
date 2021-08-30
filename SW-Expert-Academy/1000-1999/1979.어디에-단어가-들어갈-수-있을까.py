@@ -2,29 +2,34 @@ case_count = int(input())
 
 for i in range(1, case_count + 1):
     size, length = list(map(int, input().split()))
-    matrix = []
+    matrix = [list(map(int, input().split())) for _ in range(size)]
     found = 0
+
     for j in range(size):
-        matrix.append(list(map(int, input().split())))
-    print(matrix)
+        cnt = 0
+        for k in range(size):
+            if matrix[j][k] == 0:
+                if cnt == length:
+                    found += 1
+                cnt = 0
+                continue
+            cnt += 1
 
-    for row in matrix:
-        straight = 0
-        straights = []
-        for index, blank in enumerate(row):
-            if blank:
-                straight += 1
-            else:
-                if straight:
-                    straights.append(straight)
-                straight = 0
-            if index == len(row) - 1 and blank:
-                straights.append(straight)
-        print(straights)
-        found += straights.count(length)
+        if cnt == length:
+            found += 1
 
-    new_matrix = [[] * size for _ in range(size)]
+    for j in range(size):
+        cnt = 0
+        for k in range(size):
+            if matrix[k][j] == 0:
+                if cnt == length:
+                    found += 1
+                cnt = 0
+                continue
+            cnt += 1
 
+        if cnt == length:
+            found += 1
     print('#{} {}'.format(i, found))
 
 """
