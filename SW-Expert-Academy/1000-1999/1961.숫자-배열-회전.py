@@ -3,8 +3,20 @@ case_count = int(input())
 for i in range(1, case_count + 1):
     length = int(input())
     matrix = [list(map(int, input().split())) for _ in range(length)]
-    print(matrix)
-    print('#{} {}'.format(i, False))
+    rotate_90 = [[0] * length for _ in range(length)]
+    rotate_180 = [[0] * length for _ in range(length)]
+    rotate_270 = [[0] * length for _ in range(length)]
+    for col in range(length):
+        for row in range(length):
+            rotate_90[row][length-col-1] = matrix[col][row]
+            rotate_180[length-col-1][length-row-1] = matrix[col][row]
+            rotate_270[length-row-1][col] = matrix[col][row]
+
+    print('#{}'.format(i))
+    for col in range(length):
+        print(''.join(list(map(str, rotate_90[col]))), end=' ')
+        print(''.join(list(map(str, rotate_180[col]))), end=' ')
+        print(''.join(list(map(str, rotate_270[col]))))
 
 
 """
