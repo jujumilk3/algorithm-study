@@ -1,70 +1,45 @@
-<h4>[SWEA/1974/파이썬3(python3)] 스도쿠 검증</h4>
+<h4>[SWEA/12741/파이썬3(python3)] 두 전구</h4>
 <h4>문제</h4>
-<p>스도쿠는 숫자퍼즐로, 가로 9칸 세로 9칸으로 이루어져 있는 표에 1 부터 9 까지의 숫자를 채워넣는 퍼즐이다.</p>
-<p><img src='https://swexpertacademy.com/main/common/fileDownload.do?downloadType=CKEditorImages&fileId=AV5PtLXqAYUDFAUq' alt='img' referrerPolicy='no-referrer' /></p>
-<p>같은 줄에 1 에서 9 까지의 숫자를 한번씩만 넣고, 3 x 3 크기의 작은 격자 또한, 1 에서 9 까지의 숫자가 겹치지 않아야 한다.</p>
-<p><img src='https://swexpertacademy.com/main/common/fileDownload.do?downloadType=CKEditorImages&fileId=AV5PtUu6AYYDFAUq' alt='img' referrerPolicy='no-referrer' /></p>
-<p>입력으로 9 X 9 크기의 스도쿠 퍼즐의 숫자들이 주어졌을 때, 위와 같이 겹치는 숫자가 없을 경우, 1을 정답으로 출력하고 그렇지 않을 경우 0 을 출력한다.</p>
-<h4>제한사항</h4>
-<ol>
-<li>퍼즐은 모두 숫자로 채워진 상태로 주어진다.</li>
-<li>입력으로 주어지는 퍼즐의 모든 숫자는 1 이상 9 이하의 정수이다.  </li>
-
-</ol>
+<p>두 개의 전구 X와 Y가 있다. 당신은 0초에서부터 시작하여 100초간 두 전구가 언제 켜지는지를 관찰하였다.
+관찰 결과, 전구 X는 관찰 시작 경과 후 A초에서부터 관찰 시작 경과 후 B초까지에만 켜져 있었다. 전구 Y는 관찰 시작 경과 후 C초에서부터 관찰 시작 경과 후 D초까지에만 켜져 있었다.
+당신이 두 전구를 관찰하던 100초 중 두 전구가 동시에 켜져 있던 시간은 몇 초일까?</p>
 <h4>입력</h4>
-<p>입력은 첫 줄에 총 테스트 케이스의 개수 T가 온다.</p>
-<p>다음 줄부터 각 테스트 케이스가 주어진다.</p>
-<p>테스트 케이스는 9 x 9 크기의 퍼즐의 데이터이다.</p>
-<pre><code>10
-7 3 6 4 2 9 5 8 1
-5 8 9 1 6 7 3 2 4
-2 1 4 5 8 3 6 9 7
-8 4 7 9 3 6 1 5 2
-1 5 3 8 4 2 9 7 6
-9 6 2 7 5 1 8 4 3
-4 2 1 3 9 8 7 6 5
-3 9 5 6 7 4 2 1 8
-6 7 8 2 1 5 4 3 9
-…
+<p>첫 번째 줄에 테스트 케이스의 수 T가 주어진다.<br/>각 테스트 케이스의 첫 번째 줄에는 네 개의 정수 A, B, C, D (0 ≤ A &lt; B ≤ 100, 0 ≤ C &lt; D ≤ 100)가 공백 하나를 사이로 두고 순서대로 주어진다.</p>
+<pre><code>3
+1 3 5 7
+0 5 2 4
+0 5 1 6
 </code></pre>
 <h4>출력</h4>
-<p>출력의 각 줄은 &#39;#t&#39;로 시작하고, 공백을 한 칸 둔 다음 정답을 출력한다.</p>
-<p>(t는 테스트 케이스의 번호를 의미하며 1부터 시작한다.)  </p>
-<pre><code>#1 1
-...
-
+<p> 각 테스트 케이스마다, 두 전구가 동시에 켜져 있던 시간이 몇 초인지를 한 줄에 하나씩 출력한다.</p>
+<pre><code>#1 0
+#2 2
+#3 4
 </code></pre>
 <h4>풀이</h4>
-<pre><code class='language-python' lang='python'>case_count = int(input())
+<pre class="line-numbers"><code class='language-python' lang='python'>case_count = int(input())
+ontimes = []
 
-for i in range(1, case_count + 1):
-    matrix = [list(map(int, input().split())) for _ in range(9)]
-    result = 1
-    # 가로세로
-    for row_index, row in enumerate(matrix):
-        as_col = []
-        if len({*row}) != 9:
-            result = 0
-            break
-        else:
-            for col in range(9):
-                as_col.append(matrix[col][row_index])
-            if len({*as_col}) != 9:
-                result = 0
-                break
+for case_number in range(1, case_count + 1):
+    seconds = list(map(int, input().split()))
+    A = [0] * (max(seconds))
+    B = [0] * (max(seconds))
+    on = 0
+    for second in range(seconds[0], seconds[1]):
+        A[second] = 1
+    for second in range(seconds[2], seconds[3]):
+        B[second] = 1
+    for a, b in zip(A, B):
+        if a and b:
+            on += 1
+    ontimes.append(on)
 
-    # 블록
-    if result:
-        for col in range(0, 9, 3):
-            for row in range(0, 9, 3):
-                block_numbers = []
-                for j in range(3):
-                    for k in range(3):
-                        block_numbers.append(matrix[col+j][row+k])
-                if len({*block_numbers}) != 9:
-                    result = 0
-                    break
-    print(&#39;#{} {}&#39;.format(i, result))
+for index, ontime in enumerate(ontimes):
+    print(&#39;#&#39;, end=&#39;&#39;)
+    print(index+1, ontime)
 </code></pre>
 <h4>설명</h4>
-<p>오랜만에 풀면서 재밌었던 문제를 만나서 남겨두려 한다. 제목에서 볼 수 있다시피 채워진 스도쿠가 주어지면 그것이 정상적으로 완성된 스도쿠인지 검증하는 문제이다. 가로, 세로, 블록 형태로 숫자들을 수집하는 건 위 풀에서와 같은 반복문으로 해결하였고 해당 숫자들에 중복이 없는지 검증하는 것은 가로, 세로, 블록형태로 진행되는 반복문들에서 마주치는 숫자들을 리스트에 저장해놨다가 그 리스트를 튜플화시켰을 때 해당 숫자들의 길이를 잼으로써 처리하였다. 중복된 데이터를 허용하지 않는 튜플의 특성상 중복데이터가 있다면 그 길이가 9 미만일 것이기 때문에 만약에 그 길이가 9 미만이면 함수의 진행을 멈추는 식으로 작성하였다.</p>
+<p>풀면서 스트레스 엄청나게 받았던 문제이다. 근데 문제 내적으로 스트레스 받았던 게 아니라 문제 외적으로 스트레스를 받았다. 분명히 정답인데 정답처리가 안됐으니까. 이걸 굳이 포스팅으로 남겨놓는 이유는 다른 문제들 처럼 좋은 문제들이었거나 그냥 맨날 풀면 습관적으로 남겼거나 그런 게 아니라 그냥 스트레스를 줘서 그렇다.<br/>&nbsp;요지는 이러하다. 이 문제를 실제로 제출하면 테스트케이스가 총 5만 개가 들어오는데 기존의 방식대로 한 for문 안에 <code class="inline">입력 -&gt; 출력</code>이라는 형태를. 같이 담아두면 아무런 로직을 더하지 않아도 입력과 출력에만 시간초과가 뜬다. 그래서 생각한게 &quot;아 정답만 한 배열에 때려박고 for문이 끝나면 형식대로 출력하자&quot;여서 저렇게 제출했는데 전에는 저렇게 제출했어도 제한시간 초과가 떴었다. 아무래도 사이트에서도 문제를 인지하고 바꾼 것 같은데 아무튼... 2번째 방법까지 실패한 나는 아 다음에는 로직을 바꿔보자 해서 이케이케 저케저케 어케어케든 해봤는데 다 오류가 뜨는 것이다. 말을 로직으로 풀어서 조건문으로도 풀어보고, 들어온 애들을 이진수화시켜서 and연산시킨다음에 1의 갯수를 세는 방법 등등 많은 시도를 해봤는데 전~~~부 제한시과 초과가 뜨더라. 입출력만 해봐도 제한시간에 걸리는데 참 부단한 노력이었다. 근데 또 제출이력에 보면 파이썬으로 제출한 정답이 있어서 포인트를 써서라도 그 정답을 보고 싶었는데 정답보기는 또 막혀있는 문제니까 뭐 방법이 없었다. 그래서 사이트에 오류 제보 넣고 기다리고 있다가 오늘 다시 시도해봤는데 통과가 잘 되더라. 물론 아직도 for문 안에 출력을 그대로 넣으면 시간초과가 뜨지만 전에는 1600개만 통과됐다고 뜨고 지금은 36000개가 통과됐다고 뜨는거 보니 뭔가 조치가 이뤄진 것 같다. 아무튼 문제는 쉬웠는데 이러저러한 이유로 스트레스를 많이 받아서 기념으로 남겨두려고 한다.<br/>&nbsp;문제를 푼 로직은 간단하다. 시간의 흐름을 배열로, 그 시간에 전구의 전원 여부를 1과 0으로 표현한 뒤에 두 전구가 모두 켜져있었던 시간을 센 뒤에 반환한다. 2번째 테스트케이스인 <code class="inline">0 5 2 4</code>를 예로 들면</p>
+<p><code class="inline">A = [1, 1, 1, 1, 1]</code>
+<code class="inline">B = [0, 0, 1, 1, 0]</code></p>
+<p>이런 형태의 배열 두 개가 만들어진다. 두 배열에 동시에 1이 들어있는 인덱스는 2개이므로 2초가 정답인 것이다. 사람의 언어로 이해해보자면 2초에서 4초까지 켜져있었다고 보면 될 것이다. 나도 말하면서 생각이 드는데 왜 2초에서 4초면 2, 3, 4니까 3초가 아니냐는 의문이 생길수도 있겠다는 생각이 들었다. 그럴땐 &#39;초사이&#39;를 생각하면 될 것 같다. 2초에 켜서 4초에 껐으면 2초와 3초사이, 3초와 4초사이에만 불이 켜져있었지 4초 이후로는 전구가 켜져있지 않으므로 전구가 켜져있던 시간은 엄밀히 2초간이 되는 것이다. 뭐 아무튼 짜증나는 문제였다.</p>
