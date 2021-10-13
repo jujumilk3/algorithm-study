@@ -1,18 +1,16 @@
-from collections import deque
-
 dx = [0, 0, 1, -1]
 dy = [1, -1, 0, 0]
 
 
 def bfs(graph, a, b):
     n = len(graph)
-    queue = deque()
-    queue.append((a, b))
+    queue = []
+    queue.append([a, b])
     graph[a][b] = 0
     count = 1
 
     while queue:
-        x, y = queue.popleft()
+        x, y = queue.pop(0)
         for i in range(4):
             nx = x + dx[i]
             ny = y + dy[i]
