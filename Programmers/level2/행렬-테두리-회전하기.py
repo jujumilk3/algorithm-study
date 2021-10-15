@@ -1,29 +1,43 @@
 def solution(rows, columns, queries):
-    matrix = []
+    matrix = [[0 for _ in range(rows)] for _ in range(columns)]
     answer = []
     number = 1
-    for column in range(rows):
-        matrix.append([])
-        for row in range(columns):
-            matrix[column].append(number)
+    for col in range(columns):
+        for row in range(rows):
+            matrix[col][row] = number
             number += 1
-    for cycle in queries:
-        total = []
-        horizon = matrix[cycle[0]-1][cycle[1]-1:cycle[3]]
-        vertical = [matrix[x][cycle[3]-1] for x in range(cycle[0]-1, cycle[2])]
-        horizon_oppo = matrix[cycle[2]-1][cycle[1]-1:cycle[3]][::-1]
-        vertical_oppo = [matrix[x][cycle[1]-1] for x in range(cycle[0]-1, cycle[2])][::-1]
-        total.append(min(horizon))
-        total.append(min(vertical))
-        total.append(min(horizon_oppo))
-        total.append(min(vertical_oppo))
-        print(horizon)
-        print(vertical)
-        print(horizon_oppo)
-        print(vertical_oppo)
-        print()
-        answer.append(min(total))
-    print("===================")
+    print(matrix)
+    for x1, y1, x2, y2 in queries:
+        tmp = matrix[x1-1][y1-1]
+        mini = tmp
+
+        # →
+        for k in range(x1-1, x2-1):
+            test = matrix[k+1][y1-1]
+            matrix[k][y1-1] = test
+            mini = min(mini, test)
+
+        # ↓
+        for k in range(y1-1, y2-1):
+            test = matrix[x2-1][k+1]
+            matrix[x2-1][k] = test
+            mini = min(mini, test)
+
+        # ←
+        for k in range(x2-1, x1-1,-1):
+            test = matrix[k-1][y2-1]
+            matrix[k][y2-1] = test
+            mini = min(mini, test)
+
+        # ↑
+        for k in range(y2-1, y1-1,-1):
+            test = matrix[x1-1][k-1]
+            matrix[x1-1][k] = test
+            mini = min(mini, test)
+
+        matrix[x1-1][y1] = tmp
+        answer.append(mini)
+
     return answer
 
 
