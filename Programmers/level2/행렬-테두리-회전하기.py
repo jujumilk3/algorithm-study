@@ -1,42 +1,35 @@
 def solution(rows, columns, queries):
-    matrix = [[0 for _ in range(rows)] for _ in range(columns)]
+    matrix = [[row * columns + col + 1 for col in range(columns)] for row in range(rows)]
     answer = []
-    number = 1
-    for col in range(columns):
-        for row in range(rows):
-            matrix[col][row] = number
-            number += 1
-    print(matrix)
-    for x1, y1, x2, y2 in queries:
-        tmp = matrix[x1-1][y1-1]
-        mini = tmp
 
-        # →
-        for k in range(x1-1, x2-1):
-            test = matrix[k+1][y1-1]
-            matrix[k][y1-1] = test
-            mini = min(mini, test)
+    for t, l, b, r in queries:
+        top, left, bottom, right = t-1, l-1, b-1, r-1
+        tmp = matrix[top][left]
+        minimum = tmp
 
-        # ↓
-        for k in range(y1-1, y2-1):
-            test = matrix[x2-1][k+1]
-            matrix[x2-1][k] = test
-            mini = min(mini, test)
+        # left
+        for y in range(top, bottom):
+            value = matrix[y+1][left]
+            matrix[y][left] = value
+            minimum = min(minimum, value)
+        # bottom
+        for x in range(left, right):
+            value = matrix[bottom][x+1]
+            matrix[bottom][x] = value
+            minimum = min(minimum, value)
+        # right
+        for y in range(bottom, top, -1):
+            value = matrix[y-1][right]
+            matrix[y][right] = value
+            minimum = min(minimum, value)
+        # top
+        for x in range(right, left, -1):
+            value = matrix[top][x-1]
+            matrix[top][x] = value
+            minimum = min(minimum, value)
 
-        # ←
-        for k in range(x2-1, x1-1,-1):
-            test = matrix[k-1][y2-1]
-            matrix[k][y2-1] = test
-            mini = min(mini, test)
-
-        # ↑
-        for k in range(y2-1, y1-1,-1):
-            test = matrix[x1-1][k-1]
-            matrix[x1-1][k] = test
-            mini = min(mini, test)
-
-        matrix[x1-1][y1] = tmp
-        answer.append(mini)
+        matrix[top][left+1] = tmp
+        answer.append(minimum)
 
     return answer
 
