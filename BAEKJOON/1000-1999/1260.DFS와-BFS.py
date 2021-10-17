@@ -11,7 +11,6 @@ def dfs(current_node, row, foot_prints):
     for search_node in range(len(row[current_node])):
         if row[current_node][search_node] and search_node not in foot_prints:
             dfs(search_node, row, foot_prints)
-            pass
     return foot_prints
 
 
