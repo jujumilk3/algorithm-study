@@ -1,1 +1,76 @@
- 10039 10171 10172 10250 10430 10718 10757 10773 10809 10814 10817 10818 10828 10845 10869 10870 10871 10872 10950 10951 10952 10953 10989 10998 1
+<h4 data-ke-size="size20">FastAPI 기여하기</h4>
+<p data-ke-size="size16">저번에도 썼던 <a href="https://this-programmer.tistory.com/465" target="_blank">게시물</a>의 2편이라 봐도 무방하다. 일단 Contribute에 대한 공식 안내는 <a href="https://fastapi.tiangolo.com/contributing/" target="_blank">이 링크</a>를 찾아가보면 된다. 근데 이게 한사람이 관리하는 프로젝트라 언제 PR이 될지 모른다. 하지만 그냥 하는 거다. 구멍이 숭숭 뚫린 프레임워크니까..</p>
+<p data-ke-size="size16">먼저 <a href="https://github.com/tiangolo/fastapi" target="_blank">fastapi 공식 repository</a>에 간다. 그리고 fork를 딴다.</p>
+<p>&nbsp;</p>
+<p>[##_Image|kage@0I3Fl/btrtIeWWRRT/o0uwUgkuIAkN63zEcIQdBk/img.png|CDM|1.3|{"originWidth":561,"originHeight":112,"style":"alignCenter","filename":"스크린샷 2022-02-18 오후 8.56.41.png"}_##]</p>
+<p data-ke-size="size16">요기따.</p>
+<p data-ke-size="size16">&nbsp;</p>
+<p data-ke-size="size16">그리고 local에 project를 클론해서 연다.</p>
+<p>[##_Image|kage@4T0Hl/btrtKCCRbYl/nFRt6rhl1j5be4KhveoOy1/img.png|CDM|1.3|{"originWidth":1248,"originHeight":856,"style":"alignCenter","filename":"스크린샷 2022-02-18 오후 8.59.21.png"}_##]</p>
+<p data-ke-size="size16">그럼 이런 모양이 된다. 그럼 fastapi를 실행해보자</p>
+<p>[##_Image|kage@TdhB9/btrtISTIue0/SawfKiavVwjftglKTaQOkk/img.png|CDM|1.3|{"originWidth":1166,"originHeight":124,"style":"alignCenter","filename":"스크린샷 2022-02-18 오후 9.00.08.png"}_##]</p>
+<p data-ke-size="size16">당연히안된다. Fastapi는 다른 의존패키지가 꽤나 많기 때문이다. poetry에서 사용되는 <code>pyproject.toml</code>파일을 살펴보면 FastAPI의 프로젝트 의존성이 어떻게 구성돼있는지 알 수 있는데 각설하고 이걸 실행하고 싶으면 <code>pyproject.toml</code>의 requires와 dev란 안에 있는 애들을 어떻게든 설치하면 된다.</p>
+<pre class="line-numbers"><code class="language-yaml" lang="yaml">requires = [
+    "starlette ==0.17.1",
+    "pydantic &gt;=1.6.2,!=1.7,!=1.7.1,!=1.7.2,!=1.7.3,!=1.8,!=1.8.1,&lt;2.0.0",
+]
+dev = [
+    "python-jose[cryptography] &gt;=3.3.0,&lt;4.0.0",
+    "passlib[bcrypt] &gt;=1.7.2,&lt;2.0.0",
+    "autoflake &gt;=1.4.0,&lt;2.0.0",
+    "flake8 &gt;=3.8.3,&lt;4.0.0",
+    "uvicorn[standard] &gt;=0.12.0,&lt;0.16.0",
+]
+</code></pre>
+<p data-ke-size="size16">이렇게 구성돼있는데 나는 그냥 pip가 익숙해서 requirements.txt에 위 내용을 넣고 설치하였다.</p>
+<pre class="line-numbers"><code class="language-shell" lang="shell"># requirements.txt
+python-jose[cryptography] &gt;=3.3.0,&lt;4.0.0
+passlib[bcrypt] &gt;=1.7.2,&lt;2.0.0
+autoflake &gt;=1.4.0,&lt;2.0.0
+flake8 &gt;=3.8.3,&lt;4.0.0
+uvicorn[standard] &gt;=0.12.0,&lt;0.16.0
+starlette ==0.17.1
+pydantic &gt;=1.6.2,!=1.7,!=1.7.1,!=1.7.2,!=1.7.3,!=1.8,!=1.8.1,&lt;2.0.0
+
+</code></pre>
+<p data-ke-size="size16">파일은 이렇게 구성하면 된다. 그리고 패키지를 설치하고 예제에서 나온 main.app을 프로젝트 루트에 작성해서 실행하면 된다.</p>
+<pre class="line-numbers"><code class="language-python" lang="python"># main.py
+from typing import Optional
+
+from fastapi import FastAPI
+
+app = FastAPI()
+
+
+@app.get("/")
+def read_root():
+    return {"Hello": "World"}
+
+
+@app.get("/items/{item_id}")
+def read_item(item_id: int, q: Optional[str] = None):
+    return {"item_id": item_id, "q": q}
+
+</code></pre>
+<pre><code class="language-shell" lang="shell">$ uvicorn main:app --reload
+</code></pre>
+<p data-ke-size="size16">위 명령어로 실행하면?</p>
+<p>[##_Image|kage@vqQeU/btrtH05JFSk/6MrFPsjDakKs7jE6cyPAT0/img.png|CDM|1.3|{"originWidth":514,"originHeight":610,"style":"alignCenter","filename":"스크린샷 2022-02-18 오후 9.19.00.png"}_##]</p>
+<p data-ke-size="size16">자, 이렇게 익숙한 화면을 만날 수 있을 것이다. 간단하게 말하자면 FastAPI빼고 FastAPI를 실행하는 데 필요한 모든 의존성 패키지를 설치한다음에 예제대로 실행하면 된다. 주의할 점이라고 하면 toml파일에 적혀있는 패키지들의 버전도 잘 참고해야한다는 점이다. 당장에 uvicorn버전을 조금만 올려도 fastAPI는 실행되지 않는다. 어쩌면 이 상위버전 uvicorn과의 호환성도 Contribute할 수 있는 방법이 되겠다. 시간나면 나중에 내가 해야지 ㅎㅎ..</p>
+<p data-ke-size="size16">&nbsp;</p>
+<p data-ke-size="size16">그리고 주의할 점은 내가 위 과정에서 만든 main.py나 requirements.txt를 포함시켜서 PR을 날리면 안된다는 점이다. 꼭 git status명령어로 변경된 파일만 확인하고 "git add ."이 아닌 특정 파일만 지정하는 방법으로 변경된 파일을 포함해 커밋하고 PR을 날리도록 하자.</p>
+<p>[##_Image|kage@wo8A5/btrtE2wAAvT/GsmXsZyWErma35GwWeyLXK/img.png|CDM|1.3|{"originWidth":859,"originHeight":581,"style":"alignCenter","filename":"스크린샷 2022-02-18 오후 9.21.34.png"}_##]</p>
+<p data-ke-size="size16">그리고 커밋 메시지는 최대한 전의 형식과 맞게 하자. "저 이상한 사람 아니에요~"를 알려주는 과정이라고 보면 된다. 마치 원래 있던 사람이었던 것처럼 녹아드는 능력이 필요하다.</p>
+<p data-ke-size="size16">&nbsp;</p>
+<p data-ke-size="size16">아 가장 중요한 코드와 커밋내용이다.</p>
+<p data-ke-size="size16">&nbsp;</p>
+<p data-ke-size="size16">내가 날린 PR은 <a class="url" href="https://github.com/tiangolo/fastapi/pull/4573" target="_blank" rel="noopener">https://github.com/tiangolo/fastapi/pull/4573</a> 이건데 FastAPI의 endpoint가 스키마를 의존하고 있으면 그 스키마에 쓰여있는 description이 날라가는 버그가 있어서 그걸 고쳐서 PR을 날렸다. 이것과 관련해서는 다음포스팅에서 상세히 다룰 예정이다.</p>
+<p data-ke-size="size16">&nbsp;</p>
+<p data-ke-size="size16">FastAPI는 아직 규모가 작고 코드를 파악하기 쉬운 데다가 기여할 수 있는 부분도 많아서(위에서 언급한 uvicorn 호환성이라던가) 한번쯤 시도해봄직 하다. 물론 언제 PR이 받아들여질지는 모르겠다.</p>
+<p data-ke-size="size16">&nbsp;</p>
+<p>[##_Image|kage@2pL3P/btrtIOqa8Pu/WKZllmOeRkAJNDt6FyVAwk/img.png|CDM|1.3|{"originWidth":326,"originHeight":646,"style":"alignCenter","filename":"스크린샷 2022-02-18 오후 9.30.13.png"}_##]</p>
+<p data-ke-size="size16">놀랍게도 이양반 혼자서 관리하고 있는 프로젝트이니 말이다.</p>
+<p data-ke-size="size16">&nbsp;</p>
+<p data-ke-size="size16">&nbsp;</p>
+<p data-ke-size="size16">아무튼 내 PR은 언제 받아들여지나~ 하는 설레는 마음으로 아침에 눈을 뜰 수 있다. 마치 짝사랑 처럼 말이다. 다음 포스팅은 위에서 언급한 PR과 관련된 내용이 될 것이다.</p>
+<p data-ke-size="size16">&nbsp;</p>
