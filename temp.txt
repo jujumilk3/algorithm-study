@@ -1,76 +1,376 @@
-<h4 data-ke-size="size20">FastAPI 기여하기</h4>
-<p data-ke-size="size16">저번에도 썼던 <a href="https://this-programmer.tistory.com/465" target="_blank">게시물</a>의 2편이라 봐도 무방하다. 일단 Contribute에 대한 공식 안내는 <a href="https://fastapi.tiangolo.com/contributing/" target="_blank">이 링크</a>를 찾아가보면 된다. 근데 이게 한사람이 관리하는 프로젝트라 언제 PR이 될지 모른다. 하지만 그냥 하는 거다. 구멍이 숭숭 뚫린 프레임워크니까..</p>
-<p data-ke-size="size16">먼저 <a href="https://github.com/tiangolo/fastapi" target="_blank">fastapi 공식 repository</a>에 간다. 그리고 fork를 딴다.</p>
+<h4 >FastAPI Schema를 제대로 다루는 방법</h4>
+<p>FastAPI에는 Schema라는 개념이 존재한다. 만약에 스프링이나 nestJS로 개발을 해봤던 사람이라면 DTO라는 이름이 더 익숙할 것이다. 간단하게 말하자면 DTO란 Data Transfer Object의 약자로서 어떤 메소드나 클래스간 객체정보를 주고 받을 때 특정 모양으로 주고 받겠다는 일종의 약속이다.</p>
 <p>&nbsp;</p>
-<p>[##_Image|kage@0I3Fl/btrtIeWWRRT/o0uwUgkuIAkN63zEcIQdBk/img.png|CDM|1.3|{"originWidth":561,"originHeight":112,"style":"alignCenter","filename":"스크린샷 2022-02-18 오후 8.56.41.png"}_##]</p>
-<p data-ke-size="size16">요기따.</p>
-<p data-ke-size="size16">&nbsp;</p>
-<p data-ke-size="size16">그리고 local에 project를 클론해서 연다.</p>
-<p>[##_Image|kage@4T0Hl/btrtKCCRbYl/nFRt6rhl1j5be4KhveoOy1/img.png|CDM|1.3|{"originWidth":1248,"originHeight":856,"style":"alignCenter","filename":"스크린샷 2022-02-18 오후 8.59.21.png"}_##]</p>
-<p data-ke-size="size16">그럼 이런 모양이 된다. 그럼 fastapi를 실행해보자</p>
-<p>[##_Image|kage@TdhB9/btrtISTIue0/SawfKiavVwjftglKTaQOkk/img.png|CDM|1.3|{"originWidth":1166,"originHeight":124,"style":"alignCenter","filename":"스크린샷 2022-02-18 오후 9.00.08.png"}_##]</p>
-<p data-ke-size="size16">당연히안된다. Fastapi는 다른 의존패키지가 꽤나 많기 때문이다. poetry에서 사용되는 <code>pyproject.toml</code>파일을 살펴보면 FastAPI의 프로젝트 의존성이 어떻게 구성돼있는지 알 수 있는데 각설하고 이걸 실행하고 싶으면 <code>pyproject.toml</code>의 requires와 dev란 안에 있는 애들을 어떻게든 설치하면 된다.</p>
-<pre class="line-numbers"><code class="language-yaml" lang="yaml">requires = [
-    "starlette ==0.17.1",
-    "pydantic &gt;=1.6.2,!=1.7,!=1.7.1,!=1.7.2,!=1.7.3,!=1.8,!=1.8.1,&lt;2.0.0",
-]
-dev = [
-    "python-jose[cryptography] &gt;=3.3.0,&lt;4.0.0",
-    "passlib[bcrypt] &gt;=1.7.2,&lt;2.0.0",
-    "autoflake &gt;=1.4.0,&lt;2.0.0",
-    "flake8 &gt;=3.8.3,&lt;4.0.0",
-    "uvicorn[standard] &gt;=0.12.0,&lt;0.16.0",
-]
-</code></pre>
-<p data-ke-size="size16">이렇게 구성돼있는데 나는 그냥 pip가 익숙해서 requirements.txt에 위 내용을 넣고 설치하였다.</p>
-<pre class="line-numbers"><code class="language-shell" lang="shell"># requirements.txt
-python-jose[cryptography] &gt;=3.3.0,&lt;4.0.0
-passlib[bcrypt] &gt;=1.7.2,&lt;2.0.0
-autoflake &gt;=1.4.0,&lt;2.0.0
-flake8 &gt;=3.8.3,&lt;4.0.0
-uvicorn[standard] &gt;=0.12.0,&lt;0.16.0
-starlette ==0.17.1
-pydantic &gt;=1.6.2,!=1.7,!=1.7.1,!=1.7.2,!=1.7.3,!=1.8,!=1.8.1,&lt;2.0.0
+<p>FastAPI의 스키마는 pydantic model에 종속돼있다. 말이 종속이지 그냥 pydantic 패키지를 그대로 갖다 쓴다고 해도 무리가 아닐 정도다. FastAPI의 스키마는 아래처럼 생겼다.</p>
+<pre class="line-numbers"><code class='language-python' lang='python'>from pydantic import BaseModel
 
+class Item(BaseModel):
+    name: str
+    model: str
+    manufacturer: str
+    price: float
+    tax: float
 </code></pre>
-<p data-ke-size="size16">파일은 이렇게 구성하면 된다. 그리고 패키지를 설치하고 예제에서 나온 main.app을 프로젝트 루트에 작성해서 실행하면 된다.</p>
-<pre class="line-numbers"><code class="language-python" lang="python"># main.py
-from typing import Optional
-
-from fastapi import FastAPI
+<p>볼 수 있다시피 pydantic의 BaseModel을 상속받아 만들어지는 걸 알 수 있다. 이제 이걸 이용해 api endpoint를 구성해보자.</p>
+<pre class="line-numbers"><code class='language-python' lang='python'>from fastapi import FastAPI
+from pydantic import BaseModel
 
 app = FastAPI()
 
 
-@app.get("/")
-def read_root():
-    return {"Hello": "World"}
+class Item(BaseModel):
+    name: str
+    model: str
+    manufacturer: str
+    price: float
+    tax: float
 
 
-@app.get("/items/{item_id}")
-def read_item(item_id: int, q: Optional[str] = None):
-    return {"item_id": item_id, "q": q}
+@app.get(&quot;/&quot;)
+async def root(
+        item: Item
+):
+    return {&quot;message&quot;: &quot;Hello World&quot;}
 
 </code></pre>
-<pre><code class="language-shell" lang="shell">$ uvicorn main:app --reload
+<p>이렇게 기본 엔드포인트에서 Item이라는 자료형을 받겠다고 선언하면</p>
+<p>[##_Image|kage@bE3VZN/btrtJC4Kid7/NYiedE1R61c44F17g20sp1/img.png|alignCenter|width="100%"|_##]</p>
+<p>이렇게 해당 자료형을 받겠다는 example이 자동으로 생성된다. 이것은 다른 방법으로도 활용할 수 있는데 </p>
+<pre class="line-numbers"><code class='language-python' lang='python'>from fastapi import FastAPI, Depends
+from pydantic import BaseModel
+
+app = FastAPI()
+
+
+class Item(BaseModel):
+    name: str
+    model: str
+    manufacturer: str
+    price: float
+    tax: float
+
+
+@app.get(&quot;/&quot;)
+async def root(
+        item: Item = Depends()
+):
+    return {&quot;message&quot;: &quot;Hello World&quot;}
+
 </code></pre>
-<p data-ke-size="size16">위 명령어로 실행하면?</p>
-<p>[##_Image|kage@vqQeU/btrtH05JFSk/6MrFPsjDakKs7jE6cyPAT0/img.png|CDM|1.3|{"originWidth":514,"originHeight":610,"style":"alignCenter","filename":"스크린샷 2022-02-18 오후 9.19.00.png"}_##]</p>
-<p data-ke-size="size16">자, 이렇게 익숙한 화면을 만날 수 있을 것이다. 간단하게 말하자면 FastAPI빼고 FastAPI를 실행하는 데 필요한 모든 의존성 패키지를 설치한다음에 예제대로 실행하면 된다. 주의할 점이라고 하면 toml파일에 적혀있는 패키지들의 버전도 잘 참고해야한다는 점이다. 당장에 uvicorn버전을 조금만 올려도 fastAPI는 실행되지 않는다. 어쩌면 이 상위버전 uvicorn과의 호환성도 Contribute할 수 있는 방법이 되겠다. 시간나면 나중에 내가 해야지 ㅎㅎ..</p>
-<p data-ke-size="size16">&nbsp;</p>
-<p data-ke-size="size16">그리고 주의할 점은 내가 위 과정에서 만든 main.py나 requirements.txt를 포함시켜서 PR을 날리면 안된다는 점이다. 꼭 git status명령어로 변경된 파일만 확인하고 "git add ."이 아닌 특정 파일만 지정하는 방법으로 변경된 파일을 포함해 커밋하고 PR을 날리도록 하자.</p>
-<p>[##_Image|kage@wo8A5/btrtE2wAAvT/GsmXsZyWErma35GwWeyLXK/img.png|CDM|1.3|{"originWidth":859,"originHeight":581,"style":"alignCenter","filename":"스크린샷 2022-02-18 오후 9.21.34.png"}_##]</p>
-<p data-ke-size="size16">그리고 커밋 메시지는 최대한 전의 형식과 맞게 하자. "저 이상한 사람 아니에요~"를 알려주는 과정이라고 보면 된다. 마치 원래 있던 사람이었던 것처럼 녹아드는 능력이 필요하다.</p>
-<p data-ke-size="size16">&nbsp;</p>
-<p data-ke-size="size16">아 가장 중요한 코드와 커밋내용이다.</p>
-<p data-ke-size="size16">&nbsp;</p>
-<p data-ke-size="size16">내가 날린 PR은 <a class="url" href="https://github.com/tiangolo/fastapi/pull/4573" target="_blank" rel="noopener">https://github.com/tiangolo/fastapi/pull/4573</a> 이건데 FastAPI의 endpoint가 스키마를 의존하고 있으면 그 스키마에 쓰여있는 description이 날라가는 버그가 있어서 그걸 고쳐서 PR을 날렸다. 이것과 관련해서는 다음포스팅에서 상세히 다룰 예정이다.</p>
-<p data-ke-size="size16">&nbsp;</p>
-<p data-ke-size="size16">FastAPI는 아직 규모가 작고 코드를 파악하기 쉬운 데다가 기여할 수 있는 부분도 많아서(위에서 언급한 uvicorn 호환성이라던가) 한번쯤 시도해봄직 하다. 물론 언제 PR이 받아들여질지는 모르겠다.</p>
-<p data-ke-size="size16">&nbsp;</p>
-<p>[##_Image|kage@2pL3P/btrtIOqa8Pu/WKZllmOeRkAJNDt6FyVAwk/img.png|CDM|1.3|{"originWidth":326,"originHeight":646,"style":"alignCenter","filename":"스크린샷 2022-02-18 오후 9.30.13.png"}_##]</p>
-<p data-ke-size="size16">놀랍게도 이양반 혼자서 관리하고 있는 프로젝트이니 말이다.</p>
-<p data-ke-size="size16">&nbsp;</p>
-<p data-ke-size="size16">&nbsp;</p>
-<p data-ke-size="size16">아무튼 내 PR은 언제 받아들여지나~ 하는 설레는 마음으로 아침에 눈을 뜰 수 있다. 마치 짝사랑 처럼 말이다. 다음 포스팅은 위에서 언급한 PR과 관련된 내용이 될 것이다.</p>
-<p data-ke-size="size16">&nbsp;</p>
+<p>이렇게 <code class="inline">Depends</code>라는 값을 schema에 등록하면</p>
+<p>[##_Image|kage@c7BosU/btrtG8DfdI6/OxGc8I9mpTpgoqlB3OkS4k/img.png|alignCenter|width="100%"|_##]</p>
+<p>Body로 받겠다는 부분이 Parameter로 변경된 걸 볼 수 있다. 어디서 많이 본 느낌 아닌가? 맞다. search query를 구성할 때 흔히 쓰이는 방법이다. 하지만 위에서 볼 수 있다시피 required라는 제한이 걸려있는 걸 볼 수 있다. search query인데 모든 멤버에 required가 걸려있는 건 말이 안 된다. 그래서 이것을 모두 optional로 바꾸는 작업이 필요하다.</p>
+<p>정말 쉽게는</p>
+<pre class="line-numbers"><code class='language-python' lang='python'>from pydantic import BaseModel
+from typing import Optional
+
+class Item(BaseModel):
+    name: Optional[str]
+    model: Optional[str]
+    manufacturer: Optional[str]
+    price: Optional[float]
+    tax: Optional[float]
+
+</code></pre>
+<p>이렇게 구성할 수 있지만 Item이라는 스키마의 기본값이 전부 옵셔널로 들어가면 나중에 PUT method 엔드포인트를 구성할 때 Optional을 전부 걷어내야하는 번거로움이 존재한다. 아, 여기서 PUT method와 PATCH method에 대한 명확한 구분이 안가는 사람이라면 <a href='https://papababo.tistory.com/entry/HTTP-METHOD-PUT-vs-PATCH-%EC%B0%A8%EC%9D%B4%EC%A0%90' target="_blank">이 글</a>을 참조해보는 걸 추천한다. 간단히 말하자면 PUT은 어떤 한 요소의 전체 값을 바꾼다고 약속된 메소드이고 PATCH는 일부를 바꾸겠다는 메소드이다.</p>
+<p>&nbsp;</p>
+<p>그래서 나는 이 방법을 쓴다.</p>
+<pre class="line-numbers"><code class='language-python' lang='python'>from pydantic.main import ModelMetaclass
+
+class AllOptional(ModelMetaclass):
+    def __new__(self, name, bases, namespaces, **kwargs):
+        annotations = namespaces.get(&#39;__annotations__&#39;, {})
+        for base in bases:
+            annotations.update(base.__annotations__)
+        for field in annotations:
+            if not field.startswith(&#39;__&#39;):
+                annotations[field] = Optional[annotations[field]]
+        namespaces[&#39;__annotations__&#39;] = annotations
+        return super().__new__(self, name, bases, namespaces, **kwargs)
+
+</code></pre>
+<p>이 클래스는 메타클래스로 지정됐을 때 그 클래스의 멤버변수를 전부 Optional로 바꿔주는 기능을 갖고 있다.</p>
+<p>&nbsp;</p>
+<pre class="line-numbers"><code class='language-python' lang='python'>from fastapi import FastAPI, Depends
+from pydantic import BaseModel
+from pydantic.main import ModelMetaclass
+from typing import Optional
+
+app = FastAPI()
+
+
+class AllOptional(ModelMetaclass):
+    def __new__(self, name, bases, namespaces, **kwargs):
+        annotations = namespaces.get(&#39;__annotations__&#39;, {})
+        for base in bases:
+            annotations.update(base.__annotations__)
+        for field in annotations:
+            if not field.startswith(&#39;__&#39;):
+                annotations[field] = Optional[annotations[field]]
+        namespaces[&#39;__annotations__&#39;] = annotations
+        return super().__new__(self, name, bases, namespaces, **kwargs)
+
+
+class Item(BaseModel):
+    name: str
+    model: str
+    manufacturer: str
+    price: float
+    tax: float
+
+
+class OptionalItem(Item, metaclass=AllOptional):
+    pass
+
+
+@app.get(&quot;/&quot;)
+async def root(
+        item: OptionalItem = Depends()
+):
+    return {&quot;message&quot;: &quot;Hello World&quot;}
+
+</code></pre>
+<p>pydantic BaseModel로 만들어지는 클래스를 상속받고 거기에 <code class="inline">metaclass=AllOptional</code>을 지정해주면 이렇게</p>
+<p>[##_Image|kage@KuQP7/btrtH1jUkpM/lulpClOhZidyREhqpcLuSk/img.png|alignCenter|width="100%"|_##]</p>
+<p>Required가 벗겨진 parameters를 만날 수 있다.</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>하지만 실무에서 어떤 schema를 다룰 땐 넣을 땐 필요 없고 나중에 가져올 땐 필요한 것들이 있다. 흔하게 id, created_datetime, updated_datetime등이 그런 것이다. 그리고 때때로는 몇몇 멤버들을 제거하여 보여줘야할 때도 있다. spring이나 nest에서는 setFieldToIgnore함수나 Omit클래스를 사용함으로써 이런 상황에 유연하게 대처할 수 있지만 FastAPI를 다뤄본 사람은 알 수 있다시피 그런 게 없다.</p>
+<p>&nbsp;</p>
+<p>그래서 정말 많은 시행착오 끝에 FastAPI를 기존에 쓰던 DTO처럼 사용하는 방법을 정립했다. 지금은 이게 베스트 프랙티스라고 해도 무관할 것이다. 왜냐. 수많은 예제를 찾아봤지만 완벽한 대안이 없어서 내가 직접 정의하고 만들었으니 말이다.</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>위에서 사용한 Item이라는 schema를 사용해서 예제를 작성해보자면 이렇다.</p>
+<pre class="line-numbers"><code class='language-python' lang='python'>from pydantic import BaseModel
+
+class BaseItem(BaseModel):
+    name: str
+    model: str
+    manufacturer: str
+    price: float
+    tax: float
+</code></pre>
+<p>가장 기본이 되는 요소들을 BaseItem으로 정의한다. Upsert에 사용되는 요소들을 정의한다고 보면 된다. pydantic model은 기본적으로 Optional이나 =None으로 처리해주지 않으면 Required로 처리되기 때문에 PUT 메소드에 사용하는 스키마가 될 것이다.</p>
+<pre class="line-numbers"><code class='language-python' lang='python'>class Item(BaseItem, metaclass=AllOptional):
+    id: int
+    created_datetime: datetime
+    updated_datetime: datetime
+</code></pre>
+<p>BaseItem을 상속받는 Item이다. BaseModel을 상속받은 클래스를 또 상속받아도 상속받은 클래스 또한 pydantic model이 되므로 이렇게 간단하게 선언할 수 있다. 이것은 Upsert에 쓰이지 않는 Item의 기본 요소들을 포함해서 던져주는 데 사용된다. 이것은 주로 아이템을 조회할 때 쓰이는 스키마이므로 Optional을 달지 않아도 괜찮지 않을까...? 했지만 Optional이 아닌 필드가 있으면 response로 해당 모델을 불러올 때 Required로 선언된 멤버의 값이 null이나 None이면 에러를 내뱉는다. 사담이지만 Data를 보내는 게 아니라 가져올 때도 해당 모델에 값이 없으면 못불러온다? 이건 말이 안 된다고 본다. 나중에 Contribute할 수 있는 부분이 될 것 같다.</p>
+<pre class="line-numbers"><code class='language-python' lang='python'>class FindBase(BaseModel):
+    count: int
+    page: int
+    order: str
+
+
+class FindItem(FindBase, BaseItem, metaclass=AllOptional):
+    pass
+
+</code></pre>
+<p>Item을 찾는데 쓰이는 Parameter는 이렇게 구성할 수 있다. 위에서 선언한 BaseItem과 FindBase를 상속받고 metaclass=AllOptional로 모두 옵셔널로 처리해 패러미터의 required option을 벗겨내준다. 그리고 마지막으로</p>
+<pre class="line-numbers"><code class='language-python' lang='python'>class Omit(ModelMetaclass):
+    def __new__(self, name, bases, namespaces, **kwargs):
+        omit_fields = getattr(namespaces.get(&quot;Config&quot;, {}), &quot;omit_fields&quot;, {})
+        fields = namespaces.get(&#39;__fields__&#39;, {})
+        annotations = namespaces.get(&#39;__annotations__&#39;, {})
+        for base in bases:
+            fields.update(base.__fields__)
+            annotations.update(base.__annotations__)
+        merged_keys = fields.keys() &amp; annotations.keys()
+        [merged_keys.add(field) for field in fields]
+        new_fields = {}
+        new_annotations = {}
+        for field in merged_keys:
+            if not field.startswith(&#39;__&#39;) and field not in omit_fields:
+                new_annotations[field] = annotations.get(field, fields[field].type_)
+                new_fields[field] = fields[field]
+        namespaces[&#39;__annotations__&#39;] = new_annotations
+        namespaces[&#39;__fields__&#39;] = new_fields
+        return super().__new__(self, name, bases, namespaces, **kwargs)
+
+</code></pre>
+<p>이건 Omit기능을 지원하는 metaclass를 내가 제작한 것이다. 분명히 필요함직 한데 없더라.</p>
+<pre class="line-numbers"><code class='language-python' lang='python'>class BaseItem(BaseModel):
+    name: str
+    model: str
+    manufacturer: str
+    price: float
+    tax: float
+
+
+class OmittedTaxPrice(BaseItem, metaclass=Omit):
+    class Config:
+        omit_fields = {&#39;tax&#39;, &#39;price&#39;}
+</code></pre>
+<p>이렇게 class Config에 omit_fields를 선언해놓으면 해당 필드를 제거한 새로운 schema를 얻을 수 있다.</p>
+<p>&nbsp;</p>
+<p>※그리고 정말주의할 점이 있다면 metaclass라는 것은 클래스가 생성될 때마다 실행되는 것이므로 상속관계에 엮인 class들끼리는 단 하나만 선언할 수 있다. 예를 들어</p>
+<pre class="line-numbers"><code class='language-python' lang='python'>class BaseItem(BaseModel):
+    name: str
+    model: str
+    manufacturer: str
+    price: float
+    tax: float
+
+
+class Item(BaseItem, metaclass=AllOptional):
+    id: int
+    created_datetime: datetime
+    updated_datetime: datetime
+
+
+
+class TestItem(Item):
+    additional_number: int
+
+</code></pre>
+<p>이렇게 metaclass=AllOptional이 선언된 Item을 TestItem에서 상속받으면 AllOptional은 두번 실행된다. Item Class를 만들 때 한 번, 그 Item을 상속받는 TestItem을 만들 때 또 한 번. 그래서 Item을 상속받는 TestItem의 멤버변수인 additional_number도 Optional이 된다. 그것이 metaclass이다. 그래서 만약에 여기서 다른 metaclass인 Omit을 지정하면 프로그램이 깨진다.</p>
+<p><code class="inline">TypeError: metaclass conflict: the metaclass of a derived class must be a (non-strict) subclass of the metaclasses of all its bases</code></p>
+<p>&quot;하위클래스의 메타클래스는 상속받는 모든 베이스(부모) 메타클래스의 하위클래스여야 합니다&quot;</p>
+<p>예전에 이 에러를 만났을 땐 그냥 안되는 구나 하고 생각했었는데 지금 다시 보니까 metaclass들끼리도 상속관계가 명확하면 다중선언이 가능한건가 싶다. 나중에 실험해봐야지..</p>
+<p>&nbsp;</p>
+<p>그러니까 metaclass는 무조건 schema로 사용되기 전 마지막 상속단계의 class에서 선언해서 사용하는게 가독성도 좋고 기능을 직관적으로 파악하기에도 쉽다.</p>
+<p>&nbsp;</p>
+<p>뭐 아무튼 위에서 쭉 얘기한 내용을 자주 쓰이는 4개의 http method인 GET, POST, PUT, PATCH와 붙여서 써보면 이렇게 구성이 된다. 내 git repo에서도 확인할 수 있다. <a href='https://github.com/jujumilk3/fastapi-best-practice/tree/schema' target='_blank' class='url'>https://github.com/jujumilk3/fastapi-best-practice/tree/schema</a></p>
+<pre class="line-numbers"><code class='language-python' lang='python'>from datetime import datetime
+from fastapi import FastAPI, Depends
+from pydantic import BaseModel
+from pydantic.main import ModelMetaclass
+from typing import Optional, List
+
+
+app = FastAPI()
+
+
+class AllOptional(ModelMetaclass):
+    def __new__(self, name, bases, namespaces, **kwargs):
+        annotations = namespaces.get(&#39;__annotations__&#39;, {})
+        for base in bases:
+            annotations.update(base.__annotations__)
+        for field in annotations:
+            if not field.startswith(&#39;__&#39;):
+                annotations[field] = Optional[annotations[field]]
+        namespaces[&#39;__annotations__&#39;] = annotations
+        return super().__new__(self, name, bases, namespaces, **kwargs)
+
+
+class Omit(ModelMetaclass):
+    def __new__(self, name, bases, namespaces, **kwargs):
+        omit_fields = getattr(namespaces.get(&quot;Config&quot;, {}), &quot;omit_fields&quot;, {})
+        fields = namespaces.get(&#39;__fields__&#39;, {})
+        annotations = namespaces.get(&#39;__annotations__&#39;, {})
+        for base in bases:
+            fields.update(base.__fields__)
+            annotations.update(base.__annotations__)
+        merged_keys = fields.keys() &amp; annotations.keys()
+        [merged_keys.add(field) for field in fields]
+        new_fields = {}
+        new_annotations = {}
+        for field in merged_keys:
+            if not field.startswith(&#39;__&#39;) and field not in omit_fields:
+                new_annotations[field] = annotations.get(field, fields[field].type_)
+                new_fields[field] = fields[field]
+        namespaces[&#39;__annotations__&#39;] = new_annotations
+        namespaces[&#39;__fields__&#39;] = new_fields
+        return super().__new__(self, name, bases, namespaces, **kwargs)
+
+
+class BaseItem(BaseModel):
+    name: str
+    model: str
+    manufacturer: str
+    price: float
+    tax: float
+
+
+class UpsertItem(BaseItem, metaclass=AllOptional):
+    pass
+
+
+class Item(BaseItem, metaclass=AllOptional):
+    id: int
+    created_datetime: datetime
+    updated_datetime: datetime
+
+
+class OmittedTaxPrice(BaseItem, metaclass=Omit):
+    class Config:
+        omit_fields = {&#39;tax&#39;, &#39;price&#39;}
+
+
+class FindBase(BaseModel):
+    count: int
+    page: int
+    order: str
+
+
+class FindItem(FindBase, BaseItem, metaclass=AllOptional):
+    pass
+
+
+@app.get(&quot;/&quot;)
+async def root(
+):
+    return {&quot;message&quot;: &quot;Hello World&quot;}
+
+
+@app.get(&quot;/items/&quot;, response_model=List[Item])
+async def find_items(
+        find_query: FindItem = Depends()
+):
+    return {&quot;hello&quot;: &quot;world&quot;}
+
+
+@app.post(&quot;/items/&quot;, response_model=Item)
+async def create_item(
+        schema: UpsertItem
+):
+    return {&quot;hello&quot;: &quot;world&quot;}
+
+
+@app.patch(&quot;/items/{id}&quot;, response_model=Item)
+async def update_item(
+        id: int,
+        schema: UpsertItem
+):
+    return {&quot;hello&quot;: &quot;world&quot;}
+
+
+@app.put(&quot;/items/{id}&quot;, response_model=Item)
+async def put_item(
+        id: int,
+        schema: BaseItem
+):
+    return {&quot;hello&quot;: &quot;world&quot;}
+
+
+@app.get(&quot;/items/omitted&quot;, response_model=OmittedTaxPrice)
+async def omitted_item(
+        schema: OmittedTaxPrice
+):
+    return {&quot;hello&quot;: &quot;world&quot;}
+
+</code></pre>
+<p>&nbsp;</p>
+<p>이렇게 구성하면 아래와 같은 swagger문서가 생성된다.</p>
+<p><strong>1. parameter로 구성된 find items endpoint</strong></p>
+<p>[##_Image|kage@be80Tv/btrtMKOv1IA/Ai0JeMyBMKoPHSiuPR0kt0/img.png|alignCenter|width="100%"|_##]</p>
+<p>[##_Image|kage@OV9lo/btrtIloRfV0/9PaLYZydWkb94k16QRG7J1/img.png|alignCenter|width="100%"|_##]</p>
+<p>&nbsp;</p>
+<p><strong>2. create item</strong></p>
+<p>[##_Image|kage@oatg3/btrtNQHKwaP/QkRfwIyWUGoK5i7SFe7Mt1/img.png|alignCenter|width="100%"|_##]</p>
+<p>&nbsp;</p>
+<p><strong>3. PUT method</strong></p>
+<p>[##_Image|kage@OKX10/btrtJCKrn2A/mDVC5VrAK3oJlbWxEk4ahk/img.png|alignCenter|width="100%"|_##]</p>
+<p>PUT METHOD의 사용법에 맞게 name이라는 항목을 누락시켜서 보내면 name좀 담아서 보내달라고 422에러가 반환된다. BaseItem을 Body로 받겠다는 선언으로 PUT을 구성한 것이다. </p>
+<p>[##_Image|kage@xjZkM/btrtNQAXduc/m7K8pGtFK4JJfk5reThEfK/img.png|alignCenter|width="100%"|_##]</p>
+<p>[##_Image|kage@b6Y41T/btrtIe3Ypu7/rhwT2L71Mv9kpPFCVYkix1/img.png|alignCenter|width="100%"|_##]</p>
+<p>&nbsp;</p>
+<p><strong>4. PATCH method</strong></p>
+<p>[##_Image|kage@c7hiKl/btrtExDkuIh/VuHv8lPAap6tf4nw1KxYFk/img.png|alignCenter|width="100%"|_##]</p>
+<p>&nbsp;</p>
+<p><strong>5. Omitted</strong></p>
+<p>[##_Image|kage@crJJgt/btrtH06juZ1/NCMFwV2GAfze4BgkdTYFk1/img.png|alignCenter|width="100%"|_##]</p>
+<p>&nbsp;</p>
+<p>이렇게 FastAPI schema를 다루는 방법을 알아보았다. 뭔가 사용하다보면 더 필요한 기능이 보일지 모르겠지만 일단 이정도로 필요한 엔드포인트와 docs구성은 무리 없이 진행할 수 있다. FastAPI의 schema를 적극적으로 사용하여 docs를 작성하려는 사람이라면 꼭 이를 참조하여 시행착오를 줄였으면 하는 바람이다.</p>
+<p>&nbsp;</p>
