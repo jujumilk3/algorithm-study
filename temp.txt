@@ -1,376 +1,266 @@
-<h4 >FastAPI Schema를 제대로 다루는 방법</h4>
-<p>FastAPI에는 Schema라는 개념이 존재한다. 만약에 스프링이나 nestJS로 개발을 해봤던 사람이라면 DTO라는 이름이 더 익숙할 것이다. 간단하게 말하자면 DTO란 Data Transfer Object의 약자로서 어떤 메소드나 클래스간 객체정보를 주고 받을 때 특정 모양으로 주고 받겠다는 일종의 약속이다.</p>
+<h4 >macOS에서 ELK stack 구성하기 (elastick search)</h4>
+<p>그냥 brew install로 무지성 설치를 하려니 안되더라. 해서 내가 삽질한 내용과 더불어 다른 사람들은 헤매지 않길 바라며 기록해둘 요량이다.</p>
+<p>먼저 현재(2022년 2월 27일) brew search elasticsearch 하면 나오는 내용이다.</p>
+<pre class="line-numbers"><code class='language-shell' lang='shell'>$ brew search elasticsearch
+==&gt; Formulae
+elasticsearch                                                     elasticsearch@6
+</code></pre>
+<p>깔아보자.</p>
+<pre class="line-numbers"><code class='language-shell' lang='shell'>$ elasticsearch -V
+warning: no-jdk distributions that do not bundle a JDK are deprecated and will be removed in a future release
+WARNING: A terminally deprecated method in java.lang.System has been called
+WARNING: System::setSecurityManager has been called by org.elasticsearch.bootstrap.Elasticsearch (file:/usr/local/Cellar/elasticsearch/7.10.2/libexec/lib/elasticsearch-7.10.2-SNAPSHOT.jar)
+WARNING: Please consider reporting this to the maintainers of org.elasticsearch.bootstrap.Elasticsearch
+WARNING: System::setSecurityManager will be removed in a future release
+Version: 7.10.2-SNAPSHOT, Build: oss/tar/unknown/2021-01-16T01:41:27.115673Z, JVM: 17.0.2
+</code></pre>
+<p>아무튼 7.10.2가 깔린 걸 알 수 있다. 마찬가지로 brew install명령어를 통해 kibana와 logstash를 깔면</p>
+<pre class="line-numbers"><code class='language-shell' lang='shell'>$ logstash --version
+Using JAVA_HOME defined java: /Library/Java/JavaVirtualMachines/adoptopenjdk-11.jdk/Contents/Home
+logstash 7.15.2
+</code></pre>
+<pre class="line-numbers"><code class='language-shell' lang='shell'>$ kibana --version
+7.10.2
+</code></pre>
+<p>자, 이렇게 elasticsearch@7.10.2 kibana@7.10.2 logstash@7.15.2가 깔린 모습이다. 슬프지만 벌써 실패했다. 보통 ELK스택이라고 부르는 만큼 이 세 어플리케이션 모두 엘라스틱서치에서 제작하고 배포하는 것들인데 릴리즈가 전부 동시에 된다. 그리고 호환성도 동일버전에 맞춰져있다. 해당 부분은 <a href='https://www.elastic.co/kr/downloads/past-releases#elasticsearch' target='_blank' class='url'>https://www.elastic.co/kr/downloads/past-releases#elasticsearch</a> 이곳 엘라스틱서치 과거 릴리즈 버전을 다운받는 곳에 가보면 알겠지만 동일날짜 동일버전으로 패키지들이 배포되는 걸 알 수 있다. 그리고 무엇보다 내가 이렇게 진행했을 때 logstash와의 연결부분에서 실패했으니 안심해도 된다.</p>
 <p>&nbsp;</p>
-<p>FastAPI의 스키마는 pydantic model에 종속돼있다. 말이 종속이지 그냥 pydantic 패키지를 그대로 갖다 쓴다고 해도 무리가 아닐 정도다. FastAPI의 스키마는 아래처럼 생겼다.</p>
-<pre class="line-numbers"><code class='language-python' lang='python'>from pydantic import BaseModel
-
-class Item(BaseModel):
-    name: str
-    model: str
-    manufacturer: str
-    price: float
-    tax: float
-</code></pre>
-<p>볼 수 있다시피 pydantic의 BaseModel을 상속받아 만들어지는 걸 알 수 있다. 이제 이걸 이용해 api endpoint를 구성해보자.</p>
-<pre class="line-numbers"><code class='language-python' lang='python'>from fastapi import FastAPI
-from pydantic import BaseModel
-
-app = FastAPI()
-
-
-class Item(BaseModel):
-    name: str
-    model: str
-    manufacturer: str
-    price: float
-    tax: float
-
-
-@app.get(&quot;/&quot;)
-async def root(
-        item: Item
-):
-    return {&quot;message&quot;: &quot;Hello World&quot;}
-
-</code></pre>
-<p>이렇게 기본 엔드포인트에서 Item이라는 자료형을 받겠다고 선언하면</p>
-<p>[##_Image|kage@bE3VZN/btrtJC4Kid7/NYiedE1R61c44F17g20sp1/img.png|alignCenter|width="100%"|_##]</p>
-<p>이렇게 해당 자료형을 받겠다는 example이 자동으로 생성된다. 이것은 다른 방법으로도 활용할 수 있는데 </p>
-<pre class="line-numbers"><code class='language-python' lang='python'>from fastapi import FastAPI, Depends
-from pydantic import BaseModel
-
-app = FastAPI()
-
-
-class Item(BaseModel):
-    name: str
-    model: str
-    manufacturer: str
-    price: float
-    tax: float
-
-
-@app.get(&quot;/&quot;)
-async def root(
-        item: Item = Depends()
-):
-    return {&quot;message&quot;: &quot;Hello World&quot;}
-
-</code></pre>
-<p>이렇게 <code class="inline">Depends</code>라는 값을 schema에 등록하면</p>
-<p>[##_Image|kage@c7BosU/btrtG8DfdI6/OxGc8I9mpTpgoqlB3OkS4k/img.png|alignCenter|width="100%"|_##]</p>
-<p>Body로 받겠다는 부분이 Parameter로 변경된 걸 볼 수 있다. 어디서 많이 본 느낌 아닌가? 맞다. search query를 구성할 때 흔히 쓰이는 방법이다. 하지만 위에서 볼 수 있다시피 required라는 제한이 걸려있는 걸 볼 수 있다. search query인데 모든 멤버에 required가 걸려있는 건 말이 안 된다. 그래서 이것을 모두 optional로 바꾸는 작업이 필요하다.</p>
-<p>정말 쉽게는</p>
-<pre class="line-numbers"><code class='language-python' lang='python'>from pydantic import BaseModel
-from typing import Optional
-
-class Item(BaseModel):
-    name: Optional[str]
-    model: Optional[str]
-    manufacturer: Optional[str]
-    price: Optional[float]
-    tax: Optional[float]
-
-</code></pre>
-<p>이렇게 구성할 수 있지만 Item이라는 스키마의 기본값이 전부 옵셔널로 들어가면 나중에 PUT method 엔드포인트를 구성할 때 Optional을 전부 걷어내야하는 번거로움이 존재한다. 아, 여기서 PUT method와 PATCH method에 대한 명확한 구분이 안가는 사람이라면 <a href='https://papababo.tistory.com/entry/HTTP-METHOD-PUT-vs-PATCH-%EC%B0%A8%EC%9D%B4%EC%A0%90' target="_blank">이 글</a>을 참조해보는 걸 추천한다. 간단히 말하자면 PUT은 어떤 한 요소의 전체 값을 바꾼다고 약속된 메소드이고 PATCH는 일부를 바꾸겠다는 메소드이다.</p>
 <p>&nbsp;</p>
-<p>그래서 나는 이 방법을 쓴다.</p>
-<pre class="line-numbers"><code class='language-python' lang='python'>from pydantic.main import ModelMetaclass
-
-class AllOptional(ModelMetaclass):
-    def __new__(self, name, bases, namespaces, **kwargs):
-        annotations = namespaces.get(&#39;__annotations__&#39;, {})
-        for base in bases:
-            annotations.update(base.__annotations__)
-        for field in annotations:
-            if not field.startswith(&#39;__&#39;):
-                annotations[field] = Optional[annotations[field]]
-        namespaces[&#39;__annotations__&#39;] = annotations
-        return super().__new__(self, name, bases, namespaces, **kwargs)
-
+<p>다음 방법으로 위 사이트에서 같이 릴리즈된 버전의 tar.gz파일을 설치해서 진행해보려 했으나 service설정이나 바이너리파일을 위치하는 곳도 지정해야하는 등 갑자기 귀찮음이 밀려와서 다른 방법이 없나 싶었다. 역시나 있었다. brew tap을 이용한 설치방법이다.</p>
+<p>일단 위에서 설치한 brew 패키지들을 전부 삭제하자.</p>
+<pre class="line-numbers"><code class='language-shell' lang='shell'>$ brew uninstall elasticsearch kibana logstash
 </code></pre>
-<p>이 클래스는 메타클래스로 지정됐을 때 그 클래스의 멤버변수를 전부 Optional로 바꿔주는 기능을 갖고 있다.</p>
+<p>elasticsearch를 제공하는 저장소를 tap명령어를 통해 추가하자.</p>
+<pre class="line-numbers"><code class='language-shell' lang='shell'>$ brew tap elastic/tap
+==&gt; Tapping elastic/tap
+Cloning into &#39;/usr/local/Homebrew/Library/Taps/elastic/homebrew-tap&#39;...
+remote: Enumerating objects: 1303, done.
+remote: Counting objects: 100% (544/544), done.
+remote: Compressing objects: 100% (305/305), done.
+remote: Total 1303 (delta 423), reused 307 (delta 238), pack-reused 759
+Receiving objects: 100% (1303/1303), 317.08 KiB | 2.22 MiB/s, done.
+Resolving deltas: 100% (1009/1009), done.
+Tapped 17 formulae (37 files, 428KB).
+</code></pre>
+<p>다시 brew search elastic명령어를 쳐보면 해당 탭 저장소에서 긁어오는 다른 패키지들도 보인다.</p>
+<pre class="line-numbers"><code class='language-shell' lang='shell'>$ brew search elastic
+==&gt; Formulae
+aws-elasticbeanstalk                    elastic/tap/filebeat-full               elastic/tap/metricbeat-full
+elastic/tap/apm-server-full             elastic/tap/filebeat-oss                elastic/tap/metricbeat-oss
+elastic/tap/apm-server-oss              elastic/tap/heartbeat-full              elastic/tap/packetbeat-full
+elastic/tap/auditbeat-full              elastic/tap/heartbeat-oss               elastic/tap/packetbeat-oss
+elastic/tap/auditbeat-oss               elastic/tap/kibana-full                 elasticsearch
+elastic/tap/ecctl                       elastic/tap/logstash-full               elasticsearch@6
+elastic/tap/elasticsearch-full          elastic/tap/logstash-oss
+
+==&gt; Casks
+elasticwolf
+</code></pre>
+<p>여기서 설치하는 elastic package들은 version이 맞춰져있다.</p>
 <p>&nbsp;</p>
-<pre class="line-numbers"><code class='language-python' lang='python'>from fastapi import FastAPI, Depends
-from pydantic import BaseModel
-from pydantic.main import ModelMetaclass
-from typing import Optional
+<p>아 그전에 elasticsearch는 jvm위에서 돌아가는 어플리케이션이므로 openjdk를 설치하고 환경변수를 설정하는 부분이 필요하다.</p>
+<pre class="line-numbers"><code class='language-shell' lang='shell'>$ brew tap AdoptOpenJDK/openjdk
+$ brew cask install adoptopenjdk11
+</code></pre>
+<p>현재 elastic tap에 등록돼있는 애들은 java 11을 사용하므로 이렇게 설치하면 설치가 된다. 그리고 본인의 bash_profile에 환경변수 설정을 해준다. 나 같은 경우엔 zsh가 기본이므로 .zprofile에 기록했다.</p>
+<pre class="line-numbers"><code class='language-shell' lang='shell'>export ES_JAVA_HOME=/Library/Java/JavaVirtualMachines/adoptopenjdk-11.jdk/Contents/Home
+export JAVA_HOME=/Library/Java/JavaVirtualMachines/adoptopenjdk-11.jdk/Contents/Home
+</code></pre>
+<p>왜 이렇게 두개를 해주냐. 분명히 JAVA_HOME만 선언해주면 이건 곧 deprecated된다고 ES_JAVA_HOME으로 바꾸라고 하면서 오류가 나오는데 그렇다고 또 ES_JAVA_HOME만 선언해주면 또 오류가 난다. 이렇게 두개 다 설정해주니까 오류 없이 작동하더라. 이 환경변수는 본인 컴퓨터의 옵션이나 환경에 따라서 달라질 수 있다는 점 명심하자.</p>
+<p>&nbsp;</p>
+<p>이번엔 드디어 elk를 설치할 차례이다. 위에서 봤던 패키지 중</p>
+<pre class="line-numbers"><code class='language-shell' lang='shell'>elastic/tap/elasticsearch-full
+elastic/tap/logstash-full
+elastic/tap/kibana-full
+</code></pre>
+<p>이렇게 세 개의 패키지를 brew install 명령어로 차례대로 설치하자. 물론 차례대로 설치 안해도 된다. 참고로 oss버전과 full버전의 차이에 대해서는 <a href='http://kimjmin.net/2020/06/2020-06-elastic-devrel/' target='_blank' class='url'>http://kimjmin.net/2020/06/2020-06-elastic-devrel/</a> 이글을 읽어보면 많은 도움이 될 것이다. 짧게 요약하자면 비지니스용도로 쓰려면 OSS버전(오픈소스버전)을 써야한다는 내용이다.</p>
+<p>아, 그리고 위 패키지들을 설치하는 과정에서 xcode를 업데이트해달라는 요청이 있을 수 있다. App Store에서 xcode를 업데이트해주면 되긴 하는데 본인의 경우는 xcode를 사용하지도 않고 버전이 상당히 낮았던 터라 굉장히 오랜 시간이 걸렸다.</p>
+<p>&nbsp;</p>
+<p>아무튼 위 세개의 패키지를 설치하면 brew services 명령어를 쳤을 때 위 세개가 모두 서비스로 등록된 것을 확인할 수 있을 것이다.</p>
+<pre class="line-numbers"><code class='language-shell' lang='shell'>elasticsearch-full none
+kibana-full        none
+logstash-full      none
+</code></pre>
+<p>차례대로 실행해가며 정상작동을 확인해보자. 아 그리고 글을 쓰는 시점에는 모두 7.17.0버전으로 설치되었다.</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p><strong>elasticsearch</strong></p>
+<p><code class="inline">brew services start elasticsearch-full</code>명령어를 통해 service에 등록한다.</p>
+<p><code class="inline">curl -X GET localhost:9200</code>명령어를 통해 정상작동을 확인한다. 당연한 얘기지만 인터넷 브라우저를 키고 해당 포트로 접속해봐도 된다. elasticsearch가 실행되는 데에도 시간이 좀 걸리니 바로 안뜬다고 씅내지말고 조금 기다려보는 인내를 가져보자.</p>
+<pre class="line-numbers"><code class='language-shell' lang='shell'>$ curl -X GET localhost:9200
+{
+  &quot;name&quot; : &quot;gyuui-MacBookPro.local&quot;,
+  &quot;cluster_name&quot; : &quot;elasticsearch_gyu&quot;,
+  &quot;cluster_uuid&quot; : &quot;tNa4dMP6QhOMtIeQ6qfVBg&quot;,
+  &quot;version&quot; : {
+    &quot;number&quot; : &quot;7.17.0&quot;,
+    &quot;build_flavor&quot; : &quot;default&quot;,
+    &quot;build_type&quot; : &quot;tar&quot;,
+    &quot;build_hash&quot; : &quot;bee86328705acaa9a6daede7140defd4d9ec56bd&quot;,
+    &quot;build_date&quot; : &quot;2022-01-28T08:36:04.875279988Z&quot;,
+    &quot;build_snapshot&quot; : false,
+    &quot;lucene_version&quot; : &quot;8.11.1&quot;,
+    &quot;minimum_wire_compatibility_version&quot; : &quot;6.8.0&quot;,
+    &quot;minimum_index_compatibility_version&quot; : &quot;6.0.0-beta1&quot;
+  },
+  &quot;tagline&quot; : &quot;You Know, for Search&quot;
+}
+</code></pre>
+<p>이렇게 뜨면 성공한 것이다.</p>
+<p><img src="/Users/gyu/Library/Application Support/typora-user-images/image-20220227203514413.png" referrerpolicy="no-referrer" alt="image-20220227203514413"></p>
+<p>브라우저로 접속해봐도 확인할 수 있다. 일단 이렇게 뜨면 elasticsearch는 해결된 것이다.</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p><strong>kibana</strong></p>
+<p><code class="inline">brew services start kibana-full</code>명령어를 통해서 kibana를 실행하자. 기본설정은 localhost:5601이다. 만약에 해당 주소에서 확인할 수 없다면 <code class="inline">vim /usr/local/etc/kibana/kibana.yml</code>명령어를 통해 kibana.yml파일을 수정해야 한다. server.port와 server.host가 주석처리돼있을 수도 있으니 그부분을 풀어주면 된다. 만약에 주석처리된 상태였다면 주석상태를 해제하고 service를 restart하자 (<code class="inline">brew services restart kibana-full</code>)</p>
+<pre class="line-numbers"><code class='language-yaml' lang='yaml'># /usr/local/etc/kibana/kibana.yml
 
-app = FastAPI()
+path.data: /usr/local/var/lib/kibana/data
+# Kibana is served by a back end server. This setting specifies the port to use.
+server.port: 5601
 
-
-class AllOptional(ModelMetaclass):
-    def __new__(self, name, bases, namespaces, **kwargs):
-        annotations = namespaces.get(&#39;__annotations__&#39;, {})
-        for base in bases:
-            annotations.update(base.__annotations__)
-        for field in annotations:
-            if not field.startswith(&#39;__&#39;):
-                annotations[field] = Optional[annotations[field]]
-        namespaces[&#39;__annotations__&#39;] = annotations
-        return super().__new__(self, name, bases, namespaces, **kwargs)
-
-
-class Item(BaseModel):
-    name: str
-    model: str
-    manufacturer: str
-    price: float
-    tax: float
-
-
-class OptionalItem(Item, metaclass=AllOptional):
-    pass
-
-
-@app.get(&quot;/&quot;)
-async def root(
-        item: OptionalItem = Depends()
-):
-    return {&quot;message&quot;: &quot;Hello World&quot;}
+# Specifies the address to which the Kibana server will bind. IP addresses and host names are both valid values.
+# The default is &#39;localhost&#39;, which usually means remote machines will not be able to connect.
+# To allow connections from remote users, set this parameter to a non-loopback address.
+server.host: &quot;localhost&quot;
 
 </code></pre>
-<p>pydantic BaseModel로 만들어지는 클래스를 상속받고 거기에 <code class="inline">metaclass=AllOptional</code>을 지정해주면 이렇게</p>
-<p>[##_Image|kage@KuQP7/btrtH1jUkpM/lulpClOhZidyREhqpcLuSk/img.png|alignCenter|width="100%"|_##]</p>
-<p>Required가 벗겨진 parameters를 만날 수 있다.</p>
+<p><img src="/Users/gyu/Library/Application Support/typora-user-images/image-20220227204042100.png" referrerpolicy="no-referrer" alt="image-20220227204042100"></p>
+<p>설치와 실행이 정상적으로 됐으면 이런화면을 만날 수 있을 것이다.</p>
 <p>&nbsp;</p>
 <p>&nbsp;</p>
-<p>하지만 실무에서 어떤 schema를 다룰 땐 넣을 땐 필요 없고 나중에 가져올 땐 필요한 것들이 있다. 흔하게 id, created_datetime, updated_datetime등이 그런 것이다. 그리고 때때로는 몇몇 멤버들을 제거하여 보여줘야할 때도 있다. spring이나 nest에서는 setFieldToIgnore함수나 Omit클래스를 사용함으로써 이런 상황에 유연하게 대처할 수 있지만 FastAPI를 다뤄본 사람은 알 수 있다시피 그런 게 없다.</p>
 <p>&nbsp;</p>
-<p>그래서 정말 많은 시행착오 끝에 FastAPI를 기존에 쓰던 DTO처럼 사용하는 방법을 정립했다. 지금은 이게 베스트 프랙티스라고 해도 무관할 것이다. 왜냐. 수많은 예제를 찾아봤지만 완벽한 대안이 없어서 내가 직접 정의하고 만들었으니 말이다.</p>
+<p><strong>logstash</strong></p>
+<p>마찬가지로 <code class="inline">brew services start logstash-full</code>명령어를 통해 logstash도 서비스에 등록해보자. 하지만 기대와는 달리 logstash는 error상태가 뜨는 걸 알 수 있다.</p>
+<p><img src="/Users/gyu/Library/Application Support/typora-user-images/image-20220227204414053.png" referrerpolicy="no-referrer" alt="image-20220227204414053"></p>
+<p>logstash야 아프지마...</p>
 <p>&nbsp;</p>
-<p>&nbsp;</p>
-<p>위에서 사용한 Item이라는 schema를 사용해서 예제를 작성해보자면 이렇다.</p>
-<pre class="line-numbers"><code class='language-python' lang='python'>from pydantic import BaseModel
-
-class BaseItem(BaseModel):
-    name: str
-    model: str
-    manufacturer: str
-    price: float
-    tax: float
+<p>error는 당연한 현상이니 왜 error가 떴는지 알아보자. <code class="inline">/usr/local/var/log/logstash.log</code>에 보면 왜 에러가 출력되는지 확인해볼 수 있다.</p>
+<pre class="line-numbers"><code class='language-shell' lang='shell'>ERROR: Pipelines YAML file is empty. Location: /usr/local/Cellar/logstash-full/7.17.0/libexec/config/pipelines.yml
+usage:
+  bin/logstash -f CONFIG_PATH [-t] [-r] [] [-w COUNT] [-l LOG]
+  bin/logstash --modules MODULE_NAME [-M &quot;MODULE_NAME.var.PLUGIN_TYPE.PLUGIN_NAME.VARIABLE_NAME=VALUE&quot;] [-t] [-w COUNT] [-l LOG]
+  bin/logstash -e CONFIG_STR [-t] [--log.level fatal|error|warn|info|debug|trace] [-w COUNT] [-l LOG]
+  bin/logstash -i SHELL [--log.level fatal|error|warn|info|debug|trace]
+  bin/logstash -V [--log.level fatal|error|warn|info|debug|trace]
+  bin/logstash --help
+[2022-02-27T18:15:48,771][FATAL][org.logstash.Logstash    ] Logstash stopped processing because of an error: (SystemExit) exit
 </code></pre>
-<p>가장 기본이 되는 요소들을 BaseItem으로 정의한다. Upsert에 사용되는 요소들을 정의한다고 보면 된다. pydantic model은 기본적으로 Optional이나 =None으로 처리해주지 않으면 Required로 처리되기 때문에 PUT 메소드에 사용하는 스키마가 될 것이다.</p>
-<pre class="line-numbers"><code class='language-python' lang='python'>class Item(BaseItem, metaclass=AllOptional):
-    id: int
-    created_datetime: datetime
-    updated_datetime: datetime
+<p>아 pipeline.yml파일이 비었답니다. 해당 파일을 수정할 건데 위 오류가 발생한 원본이 아닌 user level에서 사용하는 설정파일을 건드릴 것이다. 해당 파일은 <code class="inline">/usr/local/etc/logstash</code>에 위치하고 있다.</p>
+<p>여기에 보면 pipelines.yml이라는 파일이 있는데 이걸 열어서 새로운 파이프라인을 정의해줄 것이다.</p>
+<pre class="line-numbers"><code class='language-yaml' lang='yaml'># /usr/local/etc/logstash/pipelines.yml
+
+# List of pipelines to be loaded by Logstash
+#
+# This document must be a list of dictionaries/hashes, where the keys/values are pipeline settings.
+# Default values for omitted settings are read from the `logstash.yml` file.
+# When declaring multiple pipelines, each MUST have its own `pipeline.id`.
+#
+# Example of two pipelines:
+#
+# - pipeline.id: test
+#   pipeline.workers: 1
+#   pipeline.batch.size: 1
+#   config.string: &quot;input { generator {} } filter { sleep { time =&gt; 1 } } output { stdout { codec =&gt; dots } }&quot;
+# - pipeline.id: another_test
+#   queue.type: persisted
+#   path.config: &quot;/tmp/logstash/*.config&quot;
+ - pipeline.id: sample
+   path.config: &quot;/usr/local/etc/logstash/syslog.conf&quot;
 </code></pre>
-<p>BaseItem을 상속받는 Item이다. BaseModel을 상속받은 클래스를 또 상속받아도 상속받은 클래스 또한 pydantic model이 되므로 이렇게 간단하게 선언할 수 있다. 이것은 Upsert에 쓰이지 않는 Item의 기본 요소들을 포함해서 던져주는 데 사용된다. 이것은 주로 아이템을 조회할 때 쓰이는 스키마이므로 Optional을 달지 않아도 괜찮지 않을까...? 했지만 Optional이 아닌 필드가 있으면 response로 해당 모델을 불러올 때 Required로 선언된 멤버의 값이 null이나 None이면 에러를 내뱉는다. 사담이지만 Data를 보내는 게 아니라 가져올 때도 해당 모델에 값이 없으면 못불러온다? 이건 말이 안 된다고 본다. 나중에 Contribute할 수 있는 부분이 될 것 같다.</p>
-<pre class="line-numbers"><code class='language-python' lang='python'>class FindBase(BaseModel):
-    count: int
-    page: int
-    order: str
+<p>어지럽게 쓰여져있는 설정들은 그대로 놔두고 아래 sample이라는 새로운 파이프라인을 정의했다. 파이프라인을 정의했으니 이제 해당 conf파일을 써보도록 하자. 위에서 말한 디렉토리에 보면 <code class="inline">logstash-sample.conf</code>라는 파일을 확인할 수 있다. 해당 파일을 보면 대충 conf파일을 어떻게 선언하는 것인지 확인할 수 있는데</p>
+<pre class="line-numbers"><code class='language-nginx' lang='nginx'># /usr/local/etc/logstash/logstash-sample.conf
 
 
-class FindItem(FindBase, BaseItem, metaclass=AllOptional):
-    pass
+# Sample Logstash configuration for creating a simple
+# Beats -&gt; Logstash -&gt; Elasticsearch pipeline.
 
+input {
+  beats {
+    port =&gt; 5044
+  }
+}
+
+output {
+  elasticsearch {
+    hosts =&gt; [&quot;http://localhost:9200&quot;]
+    index =&gt; &quot;%{[@metadata][beat]}-%{[@metadata][version]}-%{+YYYY.MM.dd}&quot;
+    #user =&gt; &quot;elastic&quot;
+    #password =&gt; &quot;changeme&quot;
+  }
+}
 </code></pre>
-<p>Item을 찾는데 쓰이는 Parameter는 이렇게 구성할 수 있다. 위에서 선언한 BaseItem과 FindBase를 상속받고 metaclass=AllOptional로 모두 옵셔널로 처리해 패러미터의 required option을 벗겨내준다. 그리고 마지막으로</p>
-<pre class="line-numbers"><code class='language-python' lang='python'>class Omit(ModelMetaclass):
-    def __new__(self, name, bases, namespaces, **kwargs):
-        omit_fields = getattr(namespaces.get(&quot;Config&quot;, {}), &quot;omit_fields&quot;, {})
-        fields = namespaces.get(&#39;__fields__&#39;, {})
-        annotations = namespaces.get(&#39;__annotations__&#39;, {})
-        for base in bases:
-            fields.update(base.__fields__)
-            annotations.update(base.__annotations__)
-        merged_keys = fields.keys() &amp; annotations.keys()
-        [merged_keys.add(field) for field in fields]
-        new_fields = {}
-        new_annotations = {}
-        for field in merged_keys:
-            if not field.startswith(&#39;__&#39;) and field not in omit_fields:
-                new_annotations[field] = annotations.get(field, fields[field].type_)
-                new_fields[field] = fields[field]
-        namespaces[&#39;__annotations__&#39;] = new_annotations
-        namespaces[&#39;__fields__&#39;] = new_fields
-        return super().__new__(self, name, bases, namespaces, **kwargs)
+<p>이런모양으로 들어있다. 저기에 써있는 beats라는 건 elsasticsearch에서 지원하는 write application이다. 하지만 여기선 일단 패스... 아무튼 인풋을 어떻게 받아들여서 아웃풋을 통해 아까 우리가 확인했던 elasticsearch 주소로 보내는 걸 확인할 수 있다.</p>
+<p>위 파이프라인설정에 syslog.conf라는 이름으로 conf file을 선언한다고 했으니 그 이름으로 conf file을 하나 써보자면</p>
+<pre class="line-numbers"><code class='language-nginx' lang='nginx'># /usr/local/etc/logstash/syslog.conf
 
+input {
+  file {
+    path =&gt; [ &quot;/var/log/*.log&quot;, &quot;/var/log/messages&quot;, &quot;/var/log/syslog&quot; ]
+    type =&gt; &quot;syslog&quot;
+  }
+}
+
+filter {
+  if [type] == &quot;syslog&quot; {
+    grok {
+      match =&gt; { &quot;message&quot; =&gt; &quot;%{SYSLOGTIMESTAMP:syslog_timestamp} %{SYSLOGHOST:syslog_hostname} %{DATA:syslog_program}(?:\[%{POSINT:syslog_pid}\])?: %{GREEDYDATA:syslog_message}&quot; }
+      add_field =&gt; [ &quot;received_at&quot;, &quot;%{@timestamp}&quot; ]
+      add_field =&gt; [ &quot;received_from&quot;, &quot;%{host}&quot; ]
+    }
+    syslog_pri { }
+    date {
+      match =&gt; [ &quot;syslog_timestamp&quot;, &quot;MMM  d HH:mm:ss&quot;, &quot;MMM dd HH:mm:ss&quot; ]
+    }
+  }
+}
+
+output {
+  elasticsearch {
+    hosts =&gt; [&quot;127.0.0.1:9200&quot;]
+    index =&gt; &quot;syslog-demo&quot;
+  }
+  stdout { codec =&gt; rubydebug }
+}
 </code></pre>
-<p>이건 Omit기능을 지원하는 metaclass를 내가 제작한 것이다. 분명히 필요함직 한데 없더라.</p>
-<pre class="line-numbers"><code class='language-python' lang='python'>class BaseItem(BaseModel):
-    name: str
-    model: str
-    manufacturer: str
-    price: float
-    tax: float
-
-
-class OmittedTaxPrice(BaseItem, metaclass=Omit):
-    class Config:
-        omit_fields = {&#39;tax&#39;, &#39;price&#39;}
+<p>이런 예제가 있다. <code class="inline">/var/log/syslog</code>에 쌓이는 systemlog를 filter형태를 거쳐서 output인 elasticsearch로 보내겠다는 의미이다. </p>
+<p>&nbsp;</p>
+<p>여기까지 마쳤으면 logstash파이너리파일을 통해 syslog.conf파일의 구성요소를 로드하자. -f option은 logstash config를 파일에서 불러오겠다는 의미이다.</p>
+<p><code class="inline">/usr/local/bin/logstash -f /usr/local/etc/logstash/syslog.conf</code></p>
+<p>로그가 주르르륵 올라가면서 정상작동하는 것을 확인했으면 이제 services로 등록해도 무리없이 작동할 것이다.</p>
+<p><code class="inline">brew services restart logstash-full</code></p>
+<p>명령어를 때리면 아까와는 달리 logstash도 error가 뜨지 않고 멀쩡히 started형태로 상태가 유지되는 걸 확인할 수 있다.</p>
+<p><img src="/Users/gyu/Library/Application Support/typora-user-images/image-20220227211502171.png" referrerpolicy="no-referrer" alt="image-20220227211502171"></p>
+<p>그리고 logstash도 특정 port에서의 service를 제공한다.  </p>
+<pre class="line-numbers"><code class='language-shell' lang='shell'>$ curl -X GET localhost:9600
+{&quot;host&quot;:&quot;gyuui-MacBookPro.local&quot;,&quot;version&quot;:&quot;7.17.0&quot;,&quot;http_address&quot;:&quot;127.0.0.1:9600&quot;,&quot;id&quot;:&quot;5223f2ab-ccd9-4499-b2a8-064c1f1d5a60&quot;,&quot;name&quot;:&quot;gyuui-MacBookPro.local&quot;,&quot;ephemeral_id&quot;:&quot;ed34dfee-8351-4415-b4c5-424eae0599c6&quot;,&quot;status&quot;:&quot;green&quot;,&quot;snapshot&quot;:false,&quot;pipeline&quot;:{&quot;workers&quot;:16,&quot;batch_size&quot;:125,&quot;batch_delay&quot;:50},&quot;build_date&quot;:&quot;2022-01-28T08:37:12Z&quot;,&quot;build_sha&quot;:&quot;455995c32aa353c4a719cca4f7fe8592cc160926&quot;,&quot;build_snapshot&quot;:false}
 </code></pre>
-<p>이렇게 class Config에 omit_fields를 선언해놓으면 해당 필드를 제거한 새로운 schema를 얻을 수 있다.</p>
+<p>이렇게 응답이 오는 걸 확인할 수 있다.</p>
+<p>기본 서비스포트를 정리하자면</p>
+<figure><table class="tg">
+<thead>
+<tr><th>application</th><th>port</th></tr></thead>
+<tbody><tr><td>elasticsearch</td><td>9200</td></tr><tr><td>logstash</td><td>9600</td></tr><tr><td>kibana</td><td>5601</td></tr></tbody>
+</table></figure>
+<p>위와 같다.</p>
 <p>&nbsp;</p>
-<p>※그리고 정말주의할 점이 있다면 metaclass라는 것은 클래스가 생성될 때마다 실행되는 것이므로 상속관계에 엮인 class들끼리는 단 하나만 선언할 수 있다. 예를 들어</p>
-<pre class="line-numbers"><code class='language-python' lang='python'>class BaseItem(BaseModel):
-    name: str
-    model: str
-    manufacturer: str
-    price: float
-    tax: float
-
-
-class Item(BaseItem, metaclass=AllOptional):
-    id: int
-    created_datetime: datetime
-    updated_datetime: datetime
-
-
-
-class TestItem(Item):
-    additional_number: int
-
-</code></pre>
-<p>이렇게 metaclass=AllOptional이 선언된 Item을 TestItem에서 상속받으면 AllOptional은 두번 실행된다. Item Class를 만들 때 한 번, 그 Item을 상속받는 TestItem을 만들 때 또 한 번. 그래서 Item을 상속받는 TestItem의 멤버변수인 additional_number도 Optional이 된다. 그것이 metaclass이다. 그래서 만약에 여기서 다른 metaclass인 Omit을 지정하면 프로그램이 깨진다.</p>
-<p><code class="inline">TypeError: metaclass conflict: the metaclass of a derived class must be a (non-strict) subclass of the metaclasses of all its bases</code></p>
-<p>&quot;하위클래스의 메타클래스는 상속받는 모든 베이스(부모) 메타클래스의 하위클래스여야 합니다&quot;</p>
-<p>예전에 이 에러를 만났을 땐 그냥 안되는 구나 하고 생각했었는데 지금 다시 보니까 metaclass들끼리도 상속관계가 명확하면 다중선언이 가능한건가 싶다. 나중에 실험해봐야지..</p>
+<p>그럼 이렇게 수집하는 데이터를 kibana에선 어떻게 확인할까. 위 syslog.conf파일에서 볼 수 있다시피 syslog-demo라는 이름의 index로 해당 데이터가 수집되고 있는 걸 확인할 수 있다. 여기에서 index란 무엇이냐, 보통 RDBMS의 database에 해당하는 것이라 보면 된다. 용어를 비교해보자면</p>
+<figure><table class="tg">
+<thead>
+<tr><th>RDBMS</th><th>elasticsearch</th></tr></thead>
+<tbody><tr><td>database</td><td>index</td></tr><tr><td>table</td><td>type</td></tr><tr><td>row</td><td>document</td></tr><tr><td>column</td><td>field</td></tr></tbody>
+</table></figure>
+<p>대충 이렇게 대응된다고 보면 된다. 데이터 하나가 document로 대응되는 건 mongoDB와 비슷한 느낌이라고도 볼 수 있겠다.</p>
 <p>&nbsp;</p>
-<p>그러니까 metaclass는 무조건 schema로 사용되기 전 마지막 상속단계의 class에서 선언해서 사용하는게 가독성도 좋고 기능을 직관적으로 파악하기에도 쉽다.</p>
+<p>아무튼 이렇게 수집되고 있는 데이터는 왼쪽 메뉴에서 최 하단의 Stack management -&gt; Index Patterns -&gt; Create index pattern</p>
+<p><img src="/Users/gyu/Library/Application Support/typora-user-images/image-20220227212702293.png" referrerpolicy="no-referrer" alt="image-20220227212702293"></p>
+<p>을 클릭하면 </p>
+<p><img src="/Users/gyu/Library/Application Support/typora-user-images/image-20220227212719322.png" referrerpolicy="no-referrer" alt="image-20220227212719322"></p>
+<p>이렇게 syslog-demo라는 index로 수집되고 있는 데이터들을 확인할 수 있는데 name에 syslog-demo라고 입력한 뒤에(자동완성되는 와일드카드를 이용해도 된다) Timestamp field를 우리가 conf파일에서 설정했던 @timestamp로 맞추고 index pattern생성을 마치면</p>
+<p>mune -&gt; analytics -&gt; Discover에서 좌측 상단에 syslog-demo라는 새로운 선택지가 생긴 걸 확인할 수 있을 것이다.</p>
+<p><img src="/Users/gyu/Library/Application Support/typora-user-images/image-20220227213055092.png" referrerpolicy="no-referrer" alt="image-20220227213055092"></p>
+<p>클릭해보면 이렇게 데이터가 잘 수집되고 있는 걸 확인할 수 있다.</p>
 <p>&nbsp;</p>
-<p>뭐 아무튼 위에서 쭉 얘기한 내용을 자주 쓰이는 4개의 http method인 GET, POST, PUT, PATCH와 붙여서 써보면 이렇게 구성이 된다. 내 git repo에서도 확인할 수 있다. <a href='https://github.com/jujumilk3/fastapi-best-practice/tree/schema' target='_blank' class='url'>https://github.com/jujumilk3/fastapi-best-practice/tree/schema</a></p>
-<pre class="line-numbers"><code class='language-python' lang='python'>from datetime import datetime
-from fastapi import FastAPI, Depends
-from pydantic import BaseModel
-from pydantic.main import ModelMetaclass
-from typing import Optional, List
-
-
-app = FastAPI()
-
-
-class AllOptional(ModelMetaclass):
-    def __new__(self, name, bases, namespaces, **kwargs):
-        annotations = namespaces.get(&#39;__annotations__&#39;, {})
-        for base in bases:
-            annotations.update(base.__annotations__)
-        for field in annotations:
-            if not field.startswith(&#39;__&#39;):
-                annotations[field] = Optional[annotations[field]]
-        namespaces[&#39;__annotations__&#39;] = annotations
-        return super().__new__(self, name, bases, namespaces, **kwargs)
-
-
-class Omit(ModelMetaclass):
-    def __new__(self, name, bases, namespaces, **kwargs):
-        omit_fields = getattr(namespaces.get(&quot;Config&quot;, {}), &quot;omit_fields&quot;, {})
-        fields = namespaces.get(&#39;__fields__&#39;, {})
-        annotations = namespaces.get(&#39;__annotations__&#39;, {})
-        for base in bases:
-            fields.update(base.__fields__)
-            annotations.update(base.__annotations__)
-        merged_keys = fields.keys() &amp; annotations.keys()
-        [merged_keys.add(field) for field in fields]
-        new_fields = {}
-        new_annotations = {}
-        for field in merged_keys:
-            if not field.startswith(&#39;__&#39;) and field not in omit_fields:
-                new_annotations[field] = annotations.get(field, fields[field].type_)
-                new_fields[field] = fields[field]
-        namespaces[&#39;__annotations__&#39;] = new_annotations
-        namespaces[&#39;__fields__&#39;] = new_fields
-        return super().__new__(self, name, bases, namespaces, **kwargs)
-
-
-class BaseItem(BaseModel):
-    name: str
-    model: str
-    manufacturer: str
-    price: float
-    tax: float
-
-
-class UpsertItem(BaseItem, metaclass=AllOptional):
-    pass
-
-
-class Item(BaseItem, metaclass=AllOptional):
-    id: int
-    created_datetime: datetime
-    updated_datetime: datetime
-
-
-class OmittedTaxPrice(BaseItem, metaclass=Omit):
-    class Config:
-        omit_fields = {&#39;tax&#39;, &#39;price&#39;}
-
-
-class FindBase(BaseModel):
-    count: int
-    page: int
-    order: str
-
-
-class FindItem(FindBase, BaseItem, metaclass=AllOptional):
-    pass
-
-
-@app.get(&quot;/&quot;)
-async def root(
-):
-    return {&quot;message&quot;: &quot;Hello World&quot;}
-
-
-@app.get(&quot;/items/&quot;, response_model=List[Item])
-async def find_items(
-        find_query: FindItem = Depends()
-):
-    return {&quot;hello&quot;: &quot;world&quot;}
-
-
-@app.post(&quot;/items/&quot;, response_model=Item)
-async def create_item(
-        schema: UpsertItem
-):
-    return {&quot;hello&quot;: &quot;world&quot;}
-
-
-@app.patch(&quot;/items/{id}&quot;, response_model=Item)
-async def update_item(
-        id: int,
-        schema: UpsertItem
-):
-    return {&quot;hello&quot;: &quot;world&quot;}
-
-
-@app.put(&quot;/items/{id}&quot;, response_model=Item)
-async def put_item(
-        id: int,
-        schema: BaseItem
-):
-    return {&quot;hello&quot;: &quot;world&quot;}
-
-
-@app.get(&quot;/items/omitted&quot;, response_model=OmittedTaxPrice)
-async def omitted_item(
-        schema: OmittedTaxPrice
-):
-    return {&quot;hello&quot;: &quot;world&quot;}
-
-</code></pre>
-<p>&nbsp;</p>
-<p>이렇게 구성하면 아래와 같은 swagger문서가 생성된다.</p>
-<p><strong>1. parameter로 구성된 find items endpoint</strong></p>
-<p>[##_Image|kage@be80Tv/btrtMKOv1IA/Ai0JeMyBMKoPHSiuPR0kt0/img.png|alignCenter|width="100%"|_##]</p>
-<p>[##_Image|kage@OV9lo/btrtIloRfV0/9PaLYZydWkb94k16QRG7J1/img.png|alignCenter|width="100%"|_##]</p>
-<p>&nbsp;</p>
-<p><strong>2. create item</strong></p>
-<p>[##_Image|kage@oatg3/btrtNQHKwaP/QkRfwIyWUGoK5i7SFe7Mt1/img.png|alignCenter|width="100%"|_##]</p>
-<p>&nbsp;</p>
-<p><strong>3. PUT method</strong></p>
-<p>[##_Image|kage@OKX10/btrtJCKrn2A/mDVC5VrAK3oJlbWxEk4ahk/img.png|alignCenter|width="100%"|_##]</p>
-<p>PUT METHOD의 사용법에 맞게 name이라는 항목을 누락시켜서 보내면 name좀 담아서 보내달라고 422에러가 반환된다. BaseItem을 Body로 받겠다는 선언으로 PUT을 구성한 것이다. </p>
-<p>[##_Image|kage@xjZkM/btrtNQAXduc/m7K8pGtFK4JJfk5reThEfK/img.png|alignCenter|width="100%"|_##]</p>
-<p>[##_Image|kage@b6Y41T/btrtIe3Ypu7/rhwT2L71Mv9kpPFCVYkix1/img.png|alignCenter|width="100%"|_##]</p>
-<p>&nbsp;</p>
-<p><strong>4. PATCH method</strong></p>
-<p>[##_Image|kage@c7hiKl/btrtExDkuIh/VuHv8lPAap6tf4nw1KxYFk/img.png|alignCenter|width="100%"|_##]</p>
-<p>&nbsp;</p>
-<p><strong>5. Omitted</strong></p>
-<p>[##_Image|kage@crJJgt/btrtH06juZ1/NCMFwV2GAfze4BgkdTYFk1/img.png|alignCenter|width="100%"|_##]</p>
-<p>&nbsp;</p>
-<p>이렇게 FastAPI schema를 다루는 방법을 알아보았다. 뭔가 사용하다보면 더 필요한 기능이 보일지 모르겠지만 일단 이정도로 필요한 엔드포인트와 docs구성은 무리 없이 진행할 수 있다. FastAPI의 schema를 적극적으로 사용하여 docs를 작성하려는 사람이라면 꼭 이를 참조하여 시행착오를 줄였으면 하는 바람이다.</p>
+<p>당장에 elk stack을 실무에서 적극적으로 사용하고 있진 않지만 여기저기에 파편화된 설치방법을 한곳에 모아두는 것에 의의를 두려 한다.</p>
 <p>&nbsp;</p>
