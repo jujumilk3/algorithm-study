@@ -1,9 +1,12 @@
-def solution(col, row, board):
-    answer = 0
-    for y in range(col):
-        print(board[y])
-        # for x in range(row):
-        #     print(board[y][x])
+def solution(col_len, row_len, board):
+    answer = ''
+    matrix = [list(row) for row in board]
+    for row in matrix:
+        print(row)
+
+    for col in range(col_len):
+        for row in range(row_len):
+            print(matrix[col][row])
     return answer
 
 
