@@ -1,0 +1,92 @@
+<h4 >docker, cronjob 하는 container 만들기 + supervisor, 환경변수 적용하기</h4>
+<p>일단은 간단한 cronjob을 수행하는 container를 만드는 Dockerfile을 작성해보자. 과정은 내가 자주 사용하는 python을 base image로 진행하겠다.</p>
+<pre><code class='language-dockerfile' lang='dockerfile'># Dockerfile
+FROM python:3.9
+
+WORKDIR /home/docker/code
+
+RUN apt-get -qq update \
+    &amp;&amp; apt-get -qq install -y --no-install-recommends \
+        cron \
+    &amp;&amp; apt-get -qq autoremove \
+    &amp;&amp; apt-get -qq clean
+
+COPY . /home/docker/code
+
+RUN cp /home/docker/code/cronjob /etc/cron.d/cronjob
+RUN chmod +x /etc/cron.d/cronjob
+RUN crontab /etc/cron.d/cronjob
+
+CMD [&quot;cron&quot;, &quot;-f&quot;]
+
+</code></pre>
+<pre><code class='language-tex' lang='tex'># cronjob
+* * * * * date &gt;&gt; /var/log/date.log 2&gt;&amp;1
+</code></pre>
+<p>이렇게 두 파일을 작성하고 docker build를 해보면 위 동작이 입력된 cronjob과 함께 docker image가 완성된다. docker hub에 등록해놓았으니 <code class="inline">docker pull jujumilk3/python-cron</code>명령어로도 이미지를 받을 수 있다. <a target="_blank" href='https://github.com/jujumilk3/dockerfiles/tree/master/python-cron'>내 dockerfile 깃 저장소</a>에서도 확인할 수 있다. 아무튼 이렇게 작성하고 해당 이미지로 컨테이너를 실행해보면 위에 지정한 /var/log/date.log 파일에서 기록된 값들을 확인할 수 있다.</p>
+<p>[##_Image|kage@cmc23l/btryn9byRT3/hxC0P09g2ZgRh6ff2bhec0/img.png|alignCenter|width="100%"|_##]</p>
+<p>이렇게 말이다. 성공적으로 cronjob이 등록된 것을 확인해볼 수 있다.</p>
+<p>&nbsp;</p>
+<p>만약에 간단한 cronjob만 수행하는 conatiner를 작성해야 했다면 여기서 끝낼 수 있다. but cron의 재미있는 특징이 있는데 바로 환경변수를 제대로 인식하지 못한다는 점이다. 보통 개발할 때 개발환경과 staging, production환경의 구분은 환경변수로 하기 때문에 크론잡이 환경변수를 읽어야할 경우과 왕왕 필요한데 이런 특징 때문에 골치가 아프다. 당장에 지금 만들어본 컨테이너 내부에서 테스트해보자. env라는 명령어를 터미널에서 쳐보면</p>
+<p>[##_Image|kage@YIxUq/btrykzWASRU/0OLlySdwEevadKqT0GlJZ0/img.png|alignCenter|width="100%"|_##]</p>
+<p>이렇게 많은 환경변수들이 등록된 것을 확인해볼 수 있는데 만약에 crontab에 해당 환경변수를 특정 파일에 기록하는 job을 등록해본다면 cron에서 실행하는 아이들은 환경변수를 제대로 못읽는 것을 알 수 있다. <code class="inline">crontab -e</code>명령어를 통해 수정모드로 들어가 기존에 등록된 data cronjob 밑에 env cronjob을 등록해보자.</p>
+<pre><code class='language-tex' lang='tex'>* * * * * date &gt;&gt; /var/log/date.log 2&gt;&amp;1
+* * * * * env &gt;&gt; /var/log/env.log 2&gt;&amp;1
+</code></pre>
+<p>그리고 시간이 지난뒤에 env.log에 기록된 것들을 확인해보면</p>
+<p>[##_Image|kage@bYOCfi/btrymkkkUzA/3kwPmxOwy9vkEbXmdSEBgK/img.png|alignCenter|width="100%"|_##]</p>
+<p>정말 슬프게도 위에서 입력한 많은 값들이 날라간 걸 확인해볼 수 있다. 이건 단순 env라는 명령어에만 국한된 것이 아니라 cron daemon이 실행시키는 모든 프로세스에 적용돼 만약에 환경변수를 활용하는 프로그램을 짰고 그것을 크론으로 실행해야 한다면 내가 의도한대로의 동작이 이뤄지지 않는다.</p>
+<p>&nbsp;</p>
+<p>그래서 결국 docker image를 빌드할 때 container환경에 이미 입력돼있는 env를 cron이 읽어줄 수 있게 해주는 중간과정이 필요하다. 단순하게 <code class="inline">env &gt;&gt; /etc/environment</code>라는 명령어를 입력하면 cron이 환경변수를 인식할 수 있게 되는데 docker build과정에서 이부분을 추가해주면 된다.</p>
+<p>[##_Image|kage@bjN91L/btrymH0B8HX/nKJivkKUOUkGIXityutTZK/img.png|alignCenter|width="100%"|_##]</p>
+<p><code class="inline">env &gt;&gt; /etc/environment</code>명령어를 입력한 뒤의 cron이 기록하고 있는 env.log파일의 내용이다. 원래의 의도대로 환경변수가 모두 인식되는 걸 확인해볼 수 있다.</p>
+<p>&nbsp;</p>
+<p>파일의 구성은 아래와 같다.</p>
+<pre><code class='language-dockerfile' lang='dockerfile'># Dockerfile
+FROM python:3.9
+
+WORKDIR /home/docker/code
+
+RUN apt-get -qq update \
+    &amp;&amp; apt-get -qq install -y --no-install-recommends \
+        cron \
+        supervisor \
+    &amp;&amp; apt-get -qq autoremove \
+    &amp;&amp; apt-get -qq clean
+
+COPY . /home/docker/code
+
+# cron
+RUN cp /home/docker/code/cronjob /etc/cron.d/cronjob
+RUN chmod +x /etc/cron.d/cronjob
+RUN crontab /etc/cron.d/cronjob
+
+# supervisor
+RUN cp /home/docker/code/supervisor-cron.conf /etc/supervisor/conf.d/
+
+RUN chmod +x /home/docker/code/startup.sh
+CMD [&quot;./startup.sh&quot;]
+
+</code></pre>
+<pre><code class='language-tex' lang='tex'># cronjob
+* * * * * date &gt;&gt; /var/log/date.log 2&gt;&amp;1
+* * * * * env &gt;&gt; /var/log/env.log 2&gt;&amp;1
+</code></pre>
+<pre><code class='language-tex' lang='tex'># supervisor-cron.conf
+[program:cronjob]
+command = cron -f
+directory=/home/docker/code
+autostart=true
+autorestart=true
+stdout_logfile=/var/log/cronjob-supervisor.log
+stderr_logfile=/var/log/cronjob-supervisor.log
+</code></pre>
+<pre><code class='language-shell' lang='shell'># startup.sh
+#!/bin/bash
+
+env &gt;&gt; /etc/environment
+supervisord -n
+</code></pre>
+<p>아래 캡쳐화면을 보면 별다른 조작 없이 cron에서 정상적으로 모든 환경변수를 인식하는 걸 확인할 수 있다.</p>
+<p>[##_Image|kage@YLFTU/btryn9byUtA/4Zz2vY5cgXkVnhsxpkVZd1/img.png|alignCenter|width="100%"|_##]</p>
+<p>이 이미지도 마찬가지로 docker hub에 등록돼있으므로 <code class="inline">docker pull jujumilk3/python-cron-env</code>명령어를 통해 이미지를 pull받을 수 있다. <a target="_blank" href='https://github.com/jujumilk3/dockerfiles/tree/master/python-cron-env'>깃헙 저장소</a>에서도 파일 구성을 확인해볼 수 있으니 이걸 활용해 적용하면 편할 것이다.</p>
