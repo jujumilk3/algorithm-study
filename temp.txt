@@ -1,266 +1,72 @@
-<h4 >macOS에서 ELK stack 구성하기 (elastick search)</h4>
-<p>그냥 brew install로 무지성 설치를 하려니 안되더라. 해서 내가 삽질한 내용과 더불어 다른 사람들은 헤매지 않길 바라며 기록해둘 요량이다.</p>
-<p>먼저 현재(2022년 2월 27일) brew search elasticsearch 하면 나오는 내용이다.</p>
-<pre class="line-numbers"><code class='language-shell' lang='shell'>$ brew search elasticsearch
-==&gt; Formulae
-elasticsearch                                                     elasticsearch@6
-</code></pre>
-<p>깔아보자.</p>
-<pre class="line-numbers"><code class='language-shell' lang='shell'>$ elasticsearch -V
-warning: no-jdk distributions that do not bundle a JDK are deprecated and will be removed in a future release
-WARNING: A terminally deprecated method in java.lang.System has been called
-WARNING: System::setSecurityManager has been called by org.elasticsearch.bootstrap.Elasticsearch (file:/usr/local/Cellar/elasticsearch/7.10.2/libexec/lib/elasticsearch-7.10.2-SNAPSHOT.jar)
-WARNING: Please consider reporting this to the maintainers of org.elasticsearch.bootstrap.Elasticsearch
-WARNING: System::setSecurityManager will be removed in a future release
-Version: 7.10.2-SNAPSHOT, Build: oss/tar/unknown/2021-01-16T01:41:27.115673Z, JVM: 17.0.2
-</code></pre>
-<p>아무튼 7.10.2가 깔린 걸 알 수 있다. 마찬가지로 brew install명령어를 통해 kibana와 logstash를 깔면</p>
-<pre class="line-numbers"><code class='language-shell' lang='shell'>$ logstash --version
-Using JAVA_HOME defined java: /Library/Java/JavaVirtualMachines/adoptopenjdk-11.jdk/Contents/Home
-logstash 7.15.2
-</code></pre>
-<pre class="line-numbers"><code class='language-shell' lang='shell'>$ kibana --version
-7.10.2
-</code></pre>
-<p>자, 이렇게 elasticsearch@7.10.2 kibana@7.10.2 logstash@7.15.2가 깔린 모습이다. 슬프지만 벌써 실패했다. 보통 ELK스택이라고 부르는 만큼 이 세 어플리케이션 모두 엘라스틱서치에서 제작하고 배포하는 것들인데 릴리즈가 전부 동시에 된다. 그리고 호환성도 동일버전에 맞춰져있다. 해당 부분은 <a href='https://www.elastic.co/kr/downloads/past-releases#elasticsearch' target='_blank' class='url'>https://www.elastic.co/kr/downloads/past-releases#elasticsearch</a> 이곳 엘라스틱서치 과거 릴리즈 버전을 다운받는 곳에 가보면 알겠지만 동일날짜 동일버전으로 패키지들이 배포되는 걸 알 수 있다. 그리고 무엇보다 내가 이렇게 진행했을 때 logstash와의 연결부분에서 실패했으니 안심해도 된다.</p>
+<h4>[프로그래머스/Level2/파이썬3(python3)] 압축</h4>
+<h4>문제</h4>
+<p>신입사원 어피치는 카카오톡으로 전송되는 메시지를 압축하여 전송 효율을 높이는 업무를 맡게 되었다. 메시지를 압축하더라도 전달되는 정보가 바뀌어서는 안 되므로, 압축 전의 정보를 완벽하게 복원 가능한 무손실 압축 알고리즘을 구현하기로 했다.</p>
+<p>어피치는 여러 압축 알고리즘 중에서 성능이 좋고 구현이 간단한 <strong>LZW</strong>(Lempel–Ziv–Welch) 압축을 구현하기로 했다. LZW 압축은 1983년 발표된 알고리즘으로, 이미지 파일 포맷인 GIF 등 다양한 응용에서 사용되었다.</p>
+<p>LZW 압축은 다음 과정을 거친다.</p>
 <p>&nbsp;</p>
-<p>&nbsp;</p>
-<p>다음 방법으로 위 사이트에서 같이 릴리즈된 버전의 tar.gz파일을 설치해서 진행해보려 했으나 service설정이나 바이너리파일을 위치하는 곳도 지정해야하는 등 갑자기 귀찮음이 밀려와서 다른 방법이 없나 싶었다. 역시나 있었다. brew tap을 이용한 설치방법이다.</p>
-<p>일단 위에서 설치한 brew 패키지들을 전부 삭제하자.</p>
-<pre class="line-numbers"><code class='language-shell' lang='shell'>$ brew uninstall elasticsearch kibana logstash
-</code></pre>
-<p>elasticsearch를 제공하는 저장소를 tap명령어를 통해 추가하자.</p>
-<pre class="line-numbers"><code class='language-shell' lang='shell'>$ brew tap elastic/tap
-==&gt; Tapping elastic/tap
-Cloning into &#39;/usr/local/Homebrew/Library/Taps/elastic/homebrew-tap&#39;...
-remote: Enumerating objects: 1303, done.
-remote: Counting objects: 100% (544/544), done.
-remote: Compressing objects: 100% (305/305), done.
-remote: Total 1303 (delta 423), reused 307 (delta 238), pack-reused 759
-Receiving objects: 100% (1303/1303), 317.08 KiB | 2.22 MiB/s, done.
-Resolving deltas: 100% (1009/1009), done.
-Tapped 17 formulae (37 files, 428KB).
-</code></pre>
-<p>다시 brew search elastic명령어를 쳐보면 해당 탭 저장소에서 긁어오는 다른 패키지들도 보인다.</p>
-<pre class="line-numbers"><code class='language-shell' lang='shell'>$ brew search elastic
-==&gt; Formulae
-aws-elasticbeanstalk                    elastic/tap/filebeat-full               elastic/tap/metricbeat-full
-elastic/tap/apm-server-full             elastic/tap/filebeat-oss                elastic/tap/metricbeat-oss
-elastic/tap/apm-server-oss              elastic/tap/heartbeat-full              elastic/tap/packetbeat-full
-elastic/tap/auditbeat-full              elastic/tap/heartbeat-oss               elastic/tap/packetbeat-oss
-elastic/tap/auditbeat-oss               elastic/tap/kibana-full                 elasticsearch
-elastic/tap/ecctl                       elastic/tap/logstash-full               elasticsearch@6
-elastic/tap/elasticsearch-full          elastic/tap/logstash-oss
+<ol>
+<li>길이가 1인 모든 단어를 포함하도록 사전을 초기화한다.</li>
+<li>사전에서 현재 입력과 일치하는 가장 긴 문자열 <code class="inline">w</code>를 찾는다.</li>
+<li><code class="inline">w</code>에 해당하는 사전의 색인 번호를 출력하고, 입력에서 <code class="inline">w</code>를 제거한다.</li>
+<li>입력에서 처리되지 않은 다음 글자가 남아있다면(<code class="inline">c</code>), <code class="inline">w+c</code>에 해당하는 단어를 사전에 등록한다.</li>
+<li>단계 2로 돌아간다.</li>
 
-==&gt; Casks
-elasticwolf
-</code></pre>
-<p>여기서 설치하는 elastic package들은 version이 맞춰져있다.</p>
-<p>&nbsp;</p>
-<p>아 그전에 elasticsearch는 jvm위에서 돌아가는 어플리케이션이므로 openjdk를 설치하고 환경변수를 설정하는 부분이 필요하다.</p>
-<pre class="line-numbers"><code class='language-shell' lang='shell'>$ brew tap AdoptOpenJDK/openjdk
-$ brew cask install adoptopenjdk11
-</code></pre>
-<p>현재 elastic tap에 등록돼있는 애들은 java 11을 사용하므로 이렇게 설치하면 설치가 된다. 그리고 본인의 bash_profile에 환경변수 설정을 해준다. 나 같은 경우엔 zsh가 기본이므로 .zprofile에 기록했다.</p>
-<pre class="line-numbers"><code class='language-shell' lang='shell'>export ES_JAVA_HOME=/Library/Java/JavaVirtualMachines/adoptopenjdk-11.jdk/Contents/Home
-export JAVA_HOME=/Library/Java/JavaVirtualMachines/adoptopenjdk-11.jdk/Contents/Home
-</code></pre>
-<p>왜 이렇게 두개를 해주냐. 분명히 JAVA_HOME만 선언해주면 이건 곧 deprecated된다고 ES_JAVA_HOME으로 바꾸라고 하면서 오류가 나오는데 그렇다고 또 ES_JAVA_HOME만 선언해주면 또 오류가 난다. 이렇게 두개 다 설정해주니까 오류 없이 작동하더라. 이 환경변수는 본인 컴퓨터의 옵션이나 환경에 따라서 달라질 수 있다는 점 명심하자.</p>
-<p>&nbsp;</p>
-<p>이번엔 드디어 elk를 설치할 차례이다. 위에서 봤던 패키지 중</p>
-<pre class="line-numbers"><code class='language-shell' lang='shell'>elastic/tap/elasticsearch-full
-elastic/tap/logstash-full
-elastic/tap/kibana-full
-</code></pre>
-<p>이렇게 세 개의 패키지를 brew install 명령어로 차례대로 설치하자. 물론 차례대로 설치 안해도 된다. 참고로 oss버전과 full버전의 차이에 대해서는 <a href='http://kimjmin.net/2020/06/2020-06-elastic-devrel/' target='_blank' class='url'>http://kimjmin.net/2020/06/2020-06-elastic-devrel/</a> 이글을 읽어보면 많은 도움이 될 것이다. 짧게 요약하자면 비지니스용도로 쓰려면 OSS버전(오픈소스버전)을 써야한다는 내용이다.</p>
-<p>아, 그리고 위 패키지들을 설치하는 과정에서 xcode를 업데이트해달라는 요청이 있을 수 있다. App Store에서 xcode를 업데이트해주면 되긴 하는데 본인의 경우는 xcode를 사용하지도 않고 버전이 상당히 낮았던 터라 굉장히 오랜 시간이 걸렸다.</p>
-<p>&nbsp;</p>
-<p>아무튼 위 세개의 패키지를 설치하면 brew services 명령어를 쳤을 때 위 세개가 모두 서비스로 등록된 것을 확인할 수 있을 것이다.</p>
-<pre class="line-numbers"><code class='language-shell' lang='shell'>elasticsearch-full none
-kibana-full        none
-logstash-full      none
-</code></pre>
-<p>차례대로 실행해가며 정상작동을 확인해보자. 아 그리고 글을 쓰는 시점에는 모두 7.17.0버전으로 설치되었다.</p>
-<p>&nbsp;</p>
-<p>&nbsp;</p>
-<p>&nbsp;</p>
-<p><strong>elasticsearch</strong></p>
-<p><code class="inline">brew services start elasticsearch-full</code>명령어를 통해 service에 등록한다.</p>
-<p><code class="inline">curl -X GET localhost:9200</code>명령어를 통해 정상작동을 확인한다. 당연한 얘기지만 인터넷 브라우저를 키고 해당 포트로 접속해봐도 된다. elasticsearch가 실행되는 데에도 시간이 좀 걸리니 바로 안뜬다고 씅내지말고 조금 기다려보는 인내를 가져보자.</p>
-<pre class="line-numbers"><code class='language-shell' lang='shell'>$ curl -X GET localhost:9200
-{
-  &quot;name&quot; : &quot;gyuui-MacBookPro.local&quot;,
-  &quot;cluster_name&quot; : &quot;elasticsearch_gyu&quot;,
-  &quot;cluster_uuid&quot; : &quot;tNa4dMP6QhOMtIeQ6qfVBg&quot;,
-  &quot;version&quot; : {
-    &quot;number&quot; : &quot;7.17.0&quot;,
-    &quot;build_flavor&quot; : &quot;default&quot;,
-    &quot;build_type&quot; : &quot;tar&quot;,
-    &quot;build_hash&quot; : &quot;bee86328705acaa9a6daede7140defd4d9ec56bd&quot;,
-    &quot;build_date&quot; : &quot;2022-01-28T08:36:04.875279988Z&quot;,
-    &quot;build_snapshot&quot; : false,
-    &quot;lucene_version&quot; : &quot;8.11.1&quot;,
-    &quot;minimum_wire_compatibility_version&quot; : &quot;6.8.0&quot;,
-    &quot;minimum_index_compatibility_version&quot; : &quot;6.0.0-beta1&quot;
-  },
-  &quot;tagline&quot; : &quot;You Know, for Search&quot;
-}
-</code></pre>
-<p>이렇게 뜨면 성공한 것이다.</p>
-<p><img src="/Users/gyu/Library/Application Support/typora-user-images/image-20220227203514413.png" referrerpolicy="no-referrer" alt="image-20220227203514413"></p>
-<p>브라우저로 접속해봐도 확인할 수 있다. 일단 이렇게 뜨면 elasticsearch는 해결된 것이다.</p>
-<p>&nbsp;</p>
-<p>&nbsp;</p>
-<p>&nbsp;</p>
-<p><strong>kibana</strong></p>
-<p><code class="inline">brew services start kibana-full</code>명령어를 통해서 kibana를 실행하자. 기본설정은 localhost:5601이다. 만약에 해당 주소에서 확인할 수 없다면 <code class="inline">vim /usr/local/etc/kibana/kibana.yml</code>명령어를 통해 kibana.yml파일을 수정해야 한다. server.port와 server.host가 주석처리돼있을 수도 있으니 그부분을 풀어주면 된다. 만약에 주석처리된 상태였다면 주석상태를 해제하고 service를 restart하자 (<code class="inline">brew services restart kibana-full</code>)</p>
-<pre class="line-numbers"><code class='language-yaml' lang='yaml'># /usr/local/etc/kibana/kibana.yml
-
-path.data: /usr/local/var/lib/kibana/data
-# Kibana is served by a back end server. This setting specifies the port to use.
-server.port: 5601
-
-# Specifies the address to which the Kibana server will bind. IP addresses and host names are both valid values.
-# The default is &#39;localhost&#39;, which usually means remote machines will not be able to connect.
-# To allow connections from remote users, set this parameter to a non-loopback address.
-server.host: &quot;localhost&quot;
-
-</code></pre>
-<p><img src="/Users/gyu/Library/Application Support/typora-user-images/image-20220227204042100.png" referrerpolicy="no-referrer" alt="image-20220227204042100"></p>
-<p>설치와 실행이 정상적으로 됐으면 이런화면을 만날 수 있을 것이다.</p>
-<p>&nbsp;</p>
-<p>&nbsp;</p>
-<p>&nbsp;</p>
-<p><strong>logstash</strong></p>
-<p>마찬가지로 <code class="inline">brew services start logstash-full</code>명령어를 통해 logstash도 서비스에 등록해보자. 하지만 기대와는 달리 logstash는 error상태가 뜨는 걸 알 수 있다.</p>
-<p><img src="/Users/gyu/Library/Application Support/typora-user-images/image-20220227204414053.png" referrerpolicy="no-referrer" alt="image-20220227204414053"></p>
-<p>logstash야 아프지마...</p>
-<p>&nbsp;</p>
-<p>error는 당연한 현상이니 왜 error가 떴는지 알아보자. <code class="inline">/usr/local/var/log/logstash.log</code>에 보면 왜 에러가 출력되는지 확인해볼 수 있다.</p>
-<pre class="line-numbers"><code class='language-shell' lang='shell'>ERROR: Pipelines YAML file is empty. Location: /usr/local/Cellar/logstash-full/7.17.0/libexec/config/pipelines.yml
-usage:
-  bin/logstash -f CONFIG_PATH [-t] [-r] [] [-w COUNT] [-l LOG]
-  bin/logstash --modules MODULE_NAME [-M &quot;MODULE_NAME.var.PLUGIN_TYPE.PLUGIN_NAME.VARIABLE_NAME=VALUE&quot;] [-t] [-w COUNT] [-l LOG]
-  bin/logstash -e CONFIG_STR [-t] [--log.level fatal|error|warn|info|debug|trace] [-w COUNT] [-l LOG]
-  bin/logstash -i SHELL [--log.level fatal|error|warn|info|debug|trace]
-  bin/logstash -V [--log.level fatal|error|warn|info|debug|trace]
-  bin/logstash --help
-[2022-02-27T18:15:48,771][FATAL][org.logstash.Logstash    ] Logstash stopped processing because of an error: (SystemExit) exit
-</code></pre>
-<p>아 pipeline.yml파일이 비었답니다. 해당 파일을 수정할 건데 위 오류가 발생한 원본이 아닌 user level에서 사용하는 설정파일을 건드릴 것이다. 해당 파일은 <code class="inline">/usr/local/etc/logstash</code>에 위치하고 있다.</p>
-<p>여기에 보면 pipelines.yml이라는 파일이 있는데 이걸 열어서 새로운 파이프라인을 정의해줄 것이다.</p>
-<pre class="line-numbers"><code class='language-yaml' lang='yaml'># /usr/local/etc/logstash/pipelines.yml
-
-# List of pipelines to be loaded by Logstash
-#
-# This document must be a list of dictionaries/hashes, where the keys/values are pipeline settings.
-# Default values for omitted settings are read from the `logstash.yml` file.
-# When declaring multiple pipelines, each MUST have its own `pipeline.id`.
-#
-# Example of two pipelines:
-#
-# - pipeline.id: test
-#   pipeline.workers: 1
-#   pipeline.batch.size: 1
-#   config.string: &quot;input { generator {} } filter { sleep { time =&gt; 1 } } output { stdout { codec =&gt; dots } }&quot;
-# - pipeline.id: another_test
-#   queue.type: persisted
-#   path.config: &quot;/tmp/logstash/*.config&quot;
- - pipeline.id: sample
-   path.config: &quot;/usr/local/etc/logstash/syslog.conf&quot;
-</code></pre>
-<p>어지럽게 쓰여져있는 설정들은 그대로 놔두고 아래 sample이라는 새로운 파이프라인을 정의했다. 파이프라인을 정의했으니 이제 해당 conf파일을 써보도록 하자. 위에서 말한 디렉토리에 보면 <code class="inline">logstash-sample.conf</code>라는 파일을 확인할 수 있다. 해당 파일을 보면 대충 conf파일을 어떻게 선언하는 것인지 확인할 수 있는데</p>
-<pre class="line-numbers"><code class='language-nginx' lang='nginx'># /usr/local/etc/logstash/logstash-sample.conf
-
-
-# Sample Logstash configuration for creating a simple
-# Beats -&gt; Logstash -&gt; Elasticsearch pipeline.
-
-input {
-  beats {
-    port =&gt; 5044
-  }
-}
-
-output {
-  elasticsearch {
-    hosts =&gt; [&quot;http://localhost:9200&quot;]
-    index =&gt; &quot;%{[@metadata][beat]}-%{[@metadata][version]}-%{+YYYY.MM.dd}&quot;
-    #user =&gt; &quot;elastic&quot;
-    #password =&gt; &quot;changeme&quot;
-  }
-}
-</code></pre>
-<p>이런모양으로 들어있다. 저기에 써있는 beats라는 건 elsasticsearch에서 지원하는 write application이다. 하지만 여기선 일단 패스... 아무튼 인풋을 어떻게 받아들여서 아웃풋을 통해 아까 우리가 확인했던 elasticsearch 주소로 보내는 걸 확인할 수 있다.</p>
-<p>위 파이프라인설정에 syslog.conf라는 이름으로 conf file을 선언한다고 했으니 그 이름으로 conf file을 하나 써보자면</p>
-<pre class="line-numbers"><code class='language-nginx' lang='nginx'># /usr/local/etc/logstash/syslog.conf
-
-input {
-  file {
-    path =&gt; [ &quot;/var/log/*.log&quot;, &quot;/var/log/messages&quot;, &quot;/var/log/syslog&quot; ]
-    type =&gt; &quot;syslog&quot;
-  }
-}
-
-filter {
-  if [type] == &quot;syslog&quot; {
-    grok {
-      match =&gt; { &quot;message&quot; =&gt; &quot;%{SYSLOGTIMESTAMP:syslog_timestamp} %{SYSLOGHOST:syslog_hostname} %{DATA:syslog_program}(?:\[%{POSINT:syslog_pid}\])?: %{GREEDYDATA:syslog_message}&quot; }
-      add_field =&gt; [ &quot;received_at&quot;, &quot;%{@timestamp}&quot; ]
-      add_field =&gt; [ &quot;received_from&quot;, &quot;%{host}&quot; ]
-    }
-    syslog_pri { }
-    date {
-      match =&gt; [ &quot;syslog_timestamp&quot;, &quot;MMM  d HH:mm:ss&quot;, &quot;MMM dd HH:mm:ss&quot; ]
-    }
-  }
-}
-
-output {
-  elasticsearch {
-    hosts =&gt; [&quot;127.0.0.1:9200&quot;]
-    index =&gt; &quot;syslog-demo&quot;
-  }
-  stdout { codec =&gt; rubydebug }
-}
-</code></pre>
-<p>이런 예제가 있다. <code class="inline">/var/log/syslog</code>에 쌓이는 systemlog를 filter형태를 거쳐서 output인 elasticsearch로 보내겠다는 의미이다. </p>
-<p>&nbsp;</p>
-<p>여기까지 마쳤으면 logstash파이너리파일을 통해 syslog.conf파일의 구성요소를 로드하자. -f option은 logstash config를 파일에서 불러오겠다는 의미이다.</p>
-<p><code class="inline">/usr/local/bin/logstash -f /usr/local/etc/logstash/syslog.conf</code></p>
-<p>로그가 주르르륵 올라가면서 정상작동하는 것을 확인했으면 이제 services로 등록해도 무리없이 작동할 것이다.</p>
-<p><code class="inline">brew services restart logstash-full</code></p>
-<p>명령어를 때리면 아까와는 달리 logstash도 error가 뜨지 않고 멀쩡히 started형태로 상태가 유지되는 걸 확인할 수 있다.</p>
-<p><img src="/Users/gyu/Library/Application Support/typora-user-images/image-20220227211502171.png" referrerpolicy="no-referrer" alt="image-20220227211502171"></p>
-<p>그리고 logstash도 특정 port에서의 service를 제공한다.  </p>
-<pre class="line-numbers"><code class='language-shell' lang='shell'>$ curl -X GET localhost:9600
-{&quot;host&quot;:&quot;gyuui-MacBookPro.local&quot;,&quot;version&quot;:&quot;7.17.0&quot;,&quot;http_address&quot;:&quot;127.0.0.1:9600&quot;,&quot;id&quot;:&quot;5223f2ab-ccd9-4499-b2a8-064c1f1d5a60&quot;,&quot;name&quot;:&quot;gyuui-MacBookPro.local&quot;,&quot;ephemeral_id&quot;:&quot;ed34dfee-8351-4415-b4c5-424eae0599c6&quot;,&quot;status&quot;:&quot;green&quot;,&quot;snapshot&quot;:false,&quot;pipeline&quot;:{&quot;workers&quot;:16,&quot;batch_size&quot;:125,&quot;batch_delay&quot;:50},&quot;build_date&quot;:&quot;2022-01-28T08:37:12Z&quot;,&quot;build_sha&quot;:&quot;455995c32aa353c4a719cca4f7fe8592cc160926&quot;,&quot;build_snapshot&quot;:false}
-</code></pre>
-<p>이렇게 응답이 오는 걸 확인할 수 있다.</p>
-<p>기본 서비스포트를 정리하자면</p>
+</ol>
+<p>압축 알고리즘이 영문 대문자만 처리한다고 할 때, 사전은 다음과 같이 초기화된다. 사전의 색인 번호는 정수값으로 주어지며, 1부터 시작한다고 하자.</p>
 <figure><table class="tg">
 <thead>
-<tr><th>application</th><th>port</th></tr></thead>
-<tbody><tr><td>elasticsearch</td><td>9200</td></tr><tr><td>logstash</td><td>9600</td></tr><tr><td>kibana</td><td>5601</td></tr></tbody>
+<tr><th>색인 번호</th><th>1</th><th>2</th><th>3</th><th>...</th><th>24</th><th>25</th><th>26</th></tr></thead>
+<tbody><tr><td>단어</td><td>A</td><td>B</td><td>C</td><td>...</td><td>X</td><td>Y</td><td>Z</td></tr></tbody>
 </table></figure>
-<p>위와 같다.</p>
-<p>&nbsp;</p>
-<p>그럼 이렇게 수집하는 데이터를 kibana에선 어떻게 확인할까. 위 syslog.conf파일에서 볼 수 있다시피 syslog-demo라는 이름의 index로 해당 데이터가 수집되고 있는 걸 확인할 수 있다. 여기에서 index란 무엇이냐, 보통 RDBMS의 database에 해당하는 것이라 보면 된다. 용어를 비교해보자면</p>
+<p>예를 들어 입력으로 <code class="inline">KAKAO</code>가 들어온다고 하자.</p>
+<ol>
+<li>현재 사전에는 <code class="inline">KAKAO</code>의 첫 글자 <code class="inline">K</code>는 등록되어 있으나, 두 번째 글자까지인 <code class="inline">KA</code>는 없으므로, 첫 글자 <code class="inline">K</code>에 해당하는 색인 번호 11을 출력하고, 다음 글자인 <code class="inline">A</code>를 포함한 <code class="inline">KA</code>를 사전에 27 번째로 등록한다.</li>
+<li>두 번째 글자 <code class="inline">A</code>는 사전에 있으나, 세 번째 글자까지인 <code class="inline">AK</code>는 사전에 없으므로, <code class="inline">A</code>의 색인 번호 1을 출력하고, <code class="inline">AK</code>를 사전에 28 번째로 등록한다.</li>
+<li>세 번째 글자에서 시작하는 <code class="inline">KA</code>가 사전에 있으므로, <code class="inline">KA</code>에 해당하는 색인 번호 27을 출력하고, 다음 글자 <code class="inline">O</code>를 포함한 <code class="inline">KAO</code>를 29 번째로 등록한다.</li>
+<li>마지막으로 처리되지 않은 글자 <code class="inline">O</code>에 해당하는 색인 번호 15를 출력한다.</li>
+
+</ol>
 <figure><table class="tg">
 <thead>
-<tr><th>RDBMS</th><th>elasticsearch</th></tr></thead>
-<tbody><tr><td>database</td><td>index</td></tr><tr><td>table</td><td>type</td></tr><tr><td>row</td><td>document</td></tr><tr><td>column</td><td>field</td></tr></tbody>
+<tr><th>현재 입력(w)</th><th>다음 글자(c)</th><th>출력</th><th>사전 추가(w+c)</th></tr></thead>
+<tbody><tr><td>K</td><td>A</td><td>11</td><td>27: KA</td></tr><tr><td>A</td><td>K</td><td>1</td><td>28: AK</td></tr><tr><td>KA</td><td>O</td><td>27</td><td>29: KAO</td></tr><tr><td>O</td><td>&nbsp;</td><td>15</td><td>&nbsp;</td></tr></tbody>
 </table></figure>
-<p>대충 이렇게 대응된다고 보면 된다. 데이터 하나가 document로 대응되는 건 mongoDB와 비슷한 느낌이라고도 볼 수 있겠다.</p>
-<p>&nbsp;</p>
-<p>아무튼 이렇게 수집되고 있는 데이터는 왼쪽 메뉴에서 최 하단의 Stack management -&gt; Index Patterns -&gt; Create index pattern</p>
-<p><img src="/Users/gyu/Library/Application Support/typora-user-images/image-20220227212702293.png" referrerpolicy="no-referrer" alt="image-20220227212702293"></p>
-<p>을 클릭하면 </p>
-<p><img src="/Users/gyu/Library/Application Support/typora-user-images/image-20220227212719322.png" referrerpolicy="no-referrer" alt="image-20220227212719322"></p>
-<p>이렇게 syslog-demo라는 index로 수집되고 있는 데이터들을 확인할 수 있는데 name에 syslog-demo라고 입력한 뒤에(자동완성되는 와일드카드를 이용해도 된다) Timestamp field를 우리가 conf파일에서 설정했던 @timestamp로 맞추고 index pattern생성을 마치면</p>
-<p>mune -&gt; analytics -&gt; Discover에서 좌측 상단에 syslog-demo라는 새로운 선택지가 생긴 걸 확인할 수 있을 것이다.</p>
-<p><img src="/Users/gyu/Library/Application Support/typora-user-images/image-20220227213055092.png" referrerpolicy="no-referrer" alt="image-20220227213055092"></p>
-<p>클릭해보면 이렇게 데이터가 잘 수집되고 있는 걸 확인할 수 있다.</p>
-<p>&nbsp;</p>
-<p>당장에 elk stack을 실무에서 적극적으로 사용하고 있진 않지만 여기저기에 파편화된 설치방법을 한곳에 모아두는 것에 의의를 두려 한다.</p>
+<p>이 과정을 거쳐 다섯 글자의 문장 <code class="inline">KAKAO</code>가 4개의 색인 번호 [11, 1, 27, 15]로 압축된다.</p>
+<p>입력으로 <code class="inline">TOBEORNOTTOBEORTOBEORNOT</code>가 들어오면 다음과 같이 압축이 진행된다.</p>
+<figure><table class="tg">
+<thead>
+<tr><th>현재 입력(w)</th><th>다음 글자(c)</th><th>출력</th><th>사전 추가(w+c)</th></tr></thead>
+<tbody><tr><td>T</td><td>O</td><td>20</td><td>27: TO</td></tr><tr><td>O</td><td>B</td><td>15</td><td>28: OB</td></tr><tr><td>B</td><td>E</td><td>2</td><td>29: BE</td></tr><tr><td>E</td><td>O</td><td>5</td><td>30: EO</td></tr><tr><td>O</td><td>R</td><td>15</td><td>31: OR</td></tr><tr><td>R</td><td>N</td><td>18</td><td>32: RN</td></tr><tr><td>N</td><td>O</td><td>14</td><td>33: NO</td></tr><tr><td>O</td><td>T</td><td>15</td><td>34: OT</td></tr><tr><td>T</td><td>T</td><td>20</td><td>35: TT</td></tr><tr><td>TO</td><td>B</td><td>27</td><td>36: TOB</td></tr><tr><td>BE</td><td>O</td><td>29</td><td>37: BEO</td></tr><tr><td>OR</td><td>T</td><td>31</td><td>38: ORT</td></tr><tr><td>TOB</td><td>E</td><td>36</td><td>39: TOBE</td></tr><tr><td>EO</td><td>R</td><td>30</td><td>40: EOR</td></tr><tr><td>RN</td><td>O</td><td>32</td><td>41: RNO</td></tr><tr><td>OT</td><td>&nbsp;</td><td>34</td><td>&nbsp;</td></tr></tbody>
+</table></figure>
+<h4>입력 형식</h4>
+<p>입력으로 영문 대문자로만 이뤄진 문자열 <code class="inline">msg</code>가 주어진다. <code class="inline">msg</code>의 길이는 1 글자 이상, 1000 글자 이하이다.</p>
+<h4>출력 형식</h4>
+<p>주어진 문자열을 압축한 후의 사전 색인 번호를 배열로 출력하라.</p>
+<h4>입출력 예</h4>
+<figure><table class="tg">
+<thead>
+<tr><th>id_list</th><th style="width: 40%;">report</th><th>k</th><th>result</th></tr></thead>
+<tbody><tr><td><code class="inline">[&quot;muzi&quot;, &quot;frodo&quot;, &quot;apeach&quot;, &quot;neo&quot;]</code></td><td><code class="inline">[&quot;muzi frodo&quot;,&quot;apeach frodo&quot;,&quot;frodo neo&quot;,&quot;muzi neo&quot;,&quot;apeach muzi&quot;]</code></td><td>2</td><td>[2,1,1,0]</td></tr><tr><td><code class="inline">[&quot;con&quot;, &quot;ryan&quot;]</code></td><td><code class="inline">[&quot;ryan con&quot;, &quot;ryan con&quot;, &quot;ryan con&quot;, &quot;ryan con&quot;]</code></td><td>3</td><td>[0,0]</td></tr></tbody>
+</table></figure>
+<h4>풀이</h4>
+<pre class="inline"><code class='language-python' lang='python'>dictionary = list(&#39; ABCDEFGHIJKLMNOPQRSTUVWXYZ&#39;)
+
+
+def solution(msg):
+    answer = []
+    w, c = 0, 0
+    while True:
+        c += 1
+        if c == len(msg):
+            answer.append(dictionary.index(msg[w:c]))
+            break
+        if msg[w:c+1] not in dictionary:
+            dictionary.append(msg[w:c+1])
+            answer.append(dictionary.index(msg[w:c]))
+            w = c
+    return answer
+
+</code></pre>
+<h4>설명</h4>
+<p>LZW 압축이라는 알고리즘을 새로 알게 된 문제이다. 간단하게 A부터 Z까지의 알파벳을 리스트화시킨 뒤에(A=1이기 때문에 빈칸 하나를 앞에 두고), 새로 조합되는 문자가 없으면 생성해 추가하고 있으면 그 index를 추가하는 식으로 간단하게 구현할 수 있었다.<br/>&nbsp;w는 만들어지는 단어의 시작 index, c는 만들어지는 단어의 마지막 index라고 생각하면 코드가 어떻게 진행되는지 쉽게 머릿속으로 그려볼 수 있다.</p>
 <p>&nbsp;</p>

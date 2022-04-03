@@ -2,17 +2,17 @@ from itertools import combinations
 
 
 def solution(relation):
-    row_size = len(relation)
-    column_size = len(relation[0])
+    col_size = len(relation)
+    row_size = len(relation[0])
     candidates = []
     combs = []
 
-    for i in range(1, column_size + 1):
-        combs.extend(combinations(range(column_size), i))
+    for i in range(1, row_size + 1):
+        combs.extend(combinations(range(row_size), i))
 
     for comb in combs:
         combined_row = set([tuple([row[index] for index in comb]) for row in relation])
-        if len(combined_row) == row_size:
+        if len(combined_row) == col_size:
             candidate = True
 
             for already in candidates:
