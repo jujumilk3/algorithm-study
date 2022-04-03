@@ -1,0 +1,104 @@
+<h4>[프로그래머스/Level2/파이썬3(python3)] n^2 배열 자르기</h4>
+<h4>문제</h4>
+<p>정수 <code class="inline">n</code>, <code class="inline">left</code>, <code class="inline">right</code>가 주어집니다. 다음 과정을 거쳐서 1차원 배열을 만들고자 합니다.</p>
+<ol>
+<li><p><code class="inline">n</code>행 <code class="inline">n</code>열 크기의 비어있는 2차원 배열을 만듭니다.</p>
+</li>
+<li><p><code class="inline">i = 1, 2, 3, ..., n</code>에 대해서, 다음 과정을 반복합니다.</p>
+<ul>
+<li>1행 1열부터 <code class="inline">i</code>행 <code class="inline">i</code>열까지의 영역 내의 모든 빈 칸을 숫자 <code class="inline">i</code>로 채웁니다.</li>
+
+</ul>
+</li>
+<li><p>1행, 2행, ..., <code class="inline">n</code>행을 잘라내어 모두 이어붙인 새로운 1차원 배열을 만듭니다.</p>
+</li>
+<li><p>새로운 1차원 배열을 <code class="inline">arr</code>이라 할 때, <code class="inline">arr[left]</code>, <code class="inline">arr[left+1]</code>, ..., <code class="inline">arr[right]</code>만 남기고 나머지는 지웁니다.</p>
+</li>
+
+</ol>
+<p>정수 <code class="inline">n</code>, <code class="inline">left</code>, <code class="inline">right</code>가 매개변수로 주어집니다. 주어진 과정대로 만들어진 1차원 배열을 return 하도록 solution 함수를 완성해주세요.</p>
+<h4>제한사항</h4>
+<ul>
+<li>1 ≤ <code class="inline">n</code> ≤ 10^7</li>
+<li>0 ≤ <code class="inline">left</code> ≤ <code class="inline">right</code> &lt; n^2</li>
+<li><code class="inline">right</code> - <code class="inline">left</code> &lt; 10^5</li>
+
+</ul>
+<h4>입출력 예</h4>
+<figure><table class="tg">
+<thead>
+<tr><th>n</th><th>left</th><th>right</th><th>result</th></tr></thead>
+<tbody><tr><td>3</td><td>2</td><td>5</td><td><code class="inline">[3,2,2,3]</code></td></tr><tr><td>4</td><td>7</td><td>14</td><td><code class="inline">[4,3,3,3,4,4,4,4]</code></td></tr></tbody>
+</table></figure>
+<h4>입출력 예 설명</h4>
+<p><strong>입출력 예 #1</strong></p>
+<ul>
+<li>다음 애니메이션은 주어진 과정대로 1차원 배열을 만드는 과정을 나타낸 것입니다.</li>
+
+</ul>
+<p><img src='https://grepp-programmers.s3.amazonaws.com/production/file_resource/103/FlattenedFills_ex1.gif' alt='ex1' referrerPolicy='no-referrer' /></p>
+<p><strong>입출력 예 #2</strong></p>
+<ul>
+<li>다음 애니메이션은 주어진 과정대로 1차원 배열을 만드는 과정을 나타낸 것입니다.</li>
+
+</ul>
+<p><img src='https://grepp-programmers.s3.amazonaws.com/production/file_resource/104/FlattenedFills_ex2.gif' alt='ex2' referrerPolicy='no-referrer' /></p>
+<h4>풀이</h4>
+<pre class="line-numbers"><code class='language-python' lang='python'>def solution(n, left, right):
+    answer = []
+    for number in range(int(left), int(right)+1):
+        quotient, remainder = divmod(number, n)
+        answer.append(quotient + 1 if quotient &gt; remainder else remainder + 1)
+    return answer
+</code></pre>
+<h4>설명</h4>
+<p>꽤나 고생했던 문제이다. 총 세번의 구현이 있었는데</p>
+<p><strong>첫번째 구현</strong></p>
+<pre class="line-numbers"><code class='language-python' lang='python'>def solution(n, left, right):
+    matrix = [[0 for _ in range(n)] for _ in range(n)]
+    for number in range(1, n+1):
+        for col in range(number):
+            for row in range(number):
+                matrix[col][row] = number if matrix[col][row] == 0 else matrix[col][row]
+    for row in matrix:
+        flat += row
+    return flat[left:right+1]
+</code></pre>
+<p>다소 러프하게 후다닥 짠 코드이다. 애초에 2차원배열을 색칠하는 것 자체가 굉장히 비효율적이지만 로직만 맞는다면 어차피 정답이겠거니 하고 제출해봤고 당연히 시간초과났다. 그래서 아 역시 색칠하는 부분(숫자를 채우는 부분)만 수정하면 되겠거니 해서 배열에 숫자를 채우는 부분만을 새로 개선해 두번째로 제출을 했다.</p>
+<p><strong>두번째 구현</strong></p>
+<pre class="line-numbers"><code class='language-python' lang='python'>def solution(n, left, right):
+    flat = []
+    matrix = []
+    n_list = list(range(1, n+1))
+    for index in n_list:
+        temp_list = n_list[index:]
+        numbers = [index] * index
+        matrix.append(numbers + temp_list)
+    for row in matrix:
+        flat += row
+    return flat[left:right+1]
+</code></pre>
+<p>배열에 숫자를 넣는 부분에서 로직 낭비를 없앴지만 역시나 시간초과가 났다. 그래서 혹시 몰라 list slicing하는 부분만 return [1,2,3,4]로 바꿔봐도 시간초과가 나길래 애초에 배열을 채워넣는 행위 자체가 문제의 의도가 아니라는 걸 확인했다. 규칙을 찾아서 해결해야하는 문제인 것을 깨달은 순간이다.</p>
+<p><strong>세번째 구현</strong></p>
+<pre class="line-numbers"><code class='language-python' lang='python'>def solution(n, left, right):
+    answer = []
+    for number in range(left, right+1):
+        quotient, remainder = divmod(number, n)
+        answer.append(quotient + 1 if quotient &gt; remainder else remainder + 1)
+    return answer
+</code></pre>
+<p>입출력 예제 1로 로직을 설명해보자면 이렇다.</p>
+<figure><table class="tg">
+<tbody><tr><td>0,0 [1]</td><td>0,1 [2]</td><td>0,2 [3]</td></tr><tr><td>1,0 [2]</td><td>1,1 [2]</td><td>1,2 [3]</td></tr><tr><td>2,0 [3]</td><td>2,1 [3]</td><td>2,2 [3]</td></tr></tbody>
+</table></figure>
+<p>좌측엔 좌표, 오른쪽엔 해당 좌표에 실제로 있어야하는 값을 의미한다. 규칙을 보면 알겠지만 두 좌표 중에서</p>
+<ol>
+<li>0과 0밖에 없다면 1</li>
+<li>1이 하나라도 있다면 2</li>
+<li>2가 하나라도 있다면 3이 되는 것을 확인할 수 있다.</li>
+
+</ol>
+<p>고로 두 좌표 사이에서 큰 수 + 1이 해당 좌표에 들어가야할 값이라는 걸 확인할 수 있다. 규칙을 확인한 이상 1차원화시킬 필요도, 2차원배열을 만들 필요도 없다. 좌표 두개의 값만 확인할 수 있으면 해당 위치에 들어가야 할 값을 알 수 있으니 말이다.</p>
+<p>&nbsp;</p>
+<p>좌표 리스트들은 어떻게 구할까, 몫과 나머지로 구할 수 있다. 좌표가 출력되는 모습이 궁금한 사람은 <code class="inline">quotient, remainder = divmod(number, n)</code>이 라인 밑에 print해보면 쉽게 이해가 갈 것이다. 그렇게 두 좌표중 커다란 좌표의 index + 1을 하면 그 안에 들어가야할 값을 얻을 수 있어서 배열을 실제로 만들지 않고도 해당 문제를 해결할 수 있다. 오히려 입출력 예제에 있는 gif로 된 것이 함정인 문제였던 것이었던 것이었던 것이었다.</p>
+<p>&nbsp;</p>

@@ -5,10 +5,10 @@ dy = [0, -1, 0, 1]
 
 
 def solution(maps):
-    row_len = len(maps)
-    col_len = len(maps[0])
+    col_len = len(maps)
+    row_len = len(maps[0])
 
-    passed = [[-1 for _ in range(col_len)] for _ in range(row_len)]
+    passed = [[-1 for _ in range(row_len)] for _ in range(col_len)]
     passed[0][0] = 1
 
     queue = deque()
@@ -20,7 +20,7 @@ def solution(maps):
             to_x = x + dx[i]
             to_y = y + dy[i]
 
-            if 0 <= to_y < row_len and 0 <= to_x < col_len and maps[to_y][to_x] == 1:
+            if 0 <= to_y < col_len and 0 <= to_x < row_len and maps[to_y][to_x] == 1:
                 if passed[to_y][to_x] == -1:
                     passed[to_y][to_x] = passed[y][x] + 1
                     queue.append([to_y, to_x])
