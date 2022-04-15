@@ -1,0 +1,56 @@
+<h4 >Docker container가 localhost를 볼 수 있게 하는 방법</h4>
+<p>IT산업이 점점 고도화, 전문화되면서 거대해지는 규모에 맞게 MSA architecture의 도입은 이제 고려의 대상이 아닌 필수가 됐다. 그만큼 기존에 개발하던 환경과도 달라져야 하는 부분이 있는데 그 중 하나가 바로 어플리케이션의 컨테이너화이다. 하지만 이 컨테이너가 참조하는 엔드포인트가 public network이 아닌, Docker engine을 실행하고 있는 localhost의 어플리케이션을 참조해야 한다면?</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>먼저 localhost에서 실행할 간단한 fastAPI의 sample을 만들어보자.</p>
+<pre class="line-numbers"><code class='language-python' lang='python'>from fastapi import FastAPI
+
+app = FastAPI()
+
+
+@app.get(&quot;/&quot;)
+async def root():
+    return {&quot;message&quot;: &quot;Hello World&quot;}
+
+</code></pre>
+<p>fastAPI 공식홈페이지에서 제공하고 있는 가장 간단한 샘플이다. <code class='inline'>uvicorn main:app --reload</code>명령어를 통해 실행시키고 command창에서 <code class='inline'>curl -X GET http://localhost:8000</code>명령어를 실행해보자. </p>
+<p>&nbsp;</p>
+<p>[##_Image|kage@RLlpG/btrzxam2dhe/lawkkj5MHw7FREfPrGFNDK/img.png|alignCenter|width="100%"|_##]</p>
+<p>멀쩡하게 response가 오는 것을 확인했다.</p>
+<p>&nbsp;</p>
+<p>이번엔 docker container내부에서 요청해보자. 어차피 한번 쓰고 버릴 컨테이너니 간단하게 <code class='inline'>docker run --rm -it ubuntu bash</code>명령어를 통해서 우분투 컨테이너를 생성함과 동시에 내부로 들어가자. 간단하게 google.com에 핑을 날려보면 잘 되는 걸 확인할 수 있을 것이다. 접속후에 <code class='inline'>apt-get update &amp;&amp; apt-get install -y curl</code>명령어로 curl패키지를 설치하는 것을 잊지 말자.</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>설치가 완료된 후 <code class='inline'>curl -X GET https://google.com</code>명령어를 입력하면 </p>
+<p>&nbsp;</p>
+<p>[##_Image|kage@dSka2k/btrzxbfcijd/EzbsNoxsPkaNYVIpmuGeUk/img.png|alignCenter|width="100%"|_##]</p>
+<p>잘 찾아가는 것을 확인할 수 있다. 하지만 아까 localhost의 커맨드창에서 쳤던 것처럼 localhost에 대한 요청을 하면 </p>
+<p>&nbsp;</p>
+<p>[##_Image|kage@bC6gek/btrzvx4SBsk/devpkKC9Mn5ovjZoDhaRKk/img.png|alignCenter|width="100%"|_##]</p>
+<p>당연한 얘기겠지만 연결이 되지 않는다. 만약에 container화한 어플리케이션을 테스트해야하는데 localhost에서 개발하고 있는 다른 서비스의 엔드포인트를 참조해야 한다면 이 방법으로는 되지 않는다.</p>
+<p>&nbsp;</p>
+<p>그럼 어떻게하느냐. 간단하다. 그냥 <code class='inline'>localhost</code>가 들어가는 부분을 <code class='inline'>host.docker.internal</code>로 바꿔주면 된다.</p>
+<p><code class='inline'>curl -X GET http://localhost:8000/</code>가 <code class='inline'>curl -X GET http://host.docker.internal:8000/</code>이렇게 되는 것이다.</p>
+<p>&nbsp;</p>
+<p>[##_Image|kage@B98vV/btrzvb8P9vK/zvf8JmbeoweCumAhAKdPNK/img.png|alignCenter|width="100%"|_##]</p>
+<p>내가 localhost에서 작동시키고 있는 api가 정상적으로 호출되는 것을 확인할 수 있다. 그러니까 결국엔 해당 어플리케이션을 컨테이너화했을 때 환경변수를 읽어 참조하는 엔드포인트에 대한 분기처리만 따로 추가해주면 된다. </p>
+<p>&nbsp;</p>
+<p>그렇다면 참조할만한 환경변수가 뭐가 있을까?</p>
+<p>[##_Image|kage@4p8Ld/btrzvLPk8H1/lvsk6KBGkT840XGH4l8YVk/img.png|alignCenter|width="100%"|_##]</p>
+<p>아무런 추가조작을 하지 않은 ubuntu container에서 env명령어를 쳤을 때 나오는 값들이다. localhost에서의 실행과 docker container로의 실행에 분기처리로 쓸 수 있을만한 값들은 안보인다. 그렇다고 .env파일을 제작해서 또 run할 때 <code class='inline'>--env-file=.env</code>이런식으로 복잡시럽게 하는 건 또 귀찮다. 그럴 땐 또 간단하게 run 명령어에 <code class='inline'>--network=host</code>라는 인수를 추가해주면 된다. 아까의 명령어와 조합해보면</p>
+<p>&nbsp;</p>
+<p><code class='inline'>docker run --rm -it --network=host ubuntu bash</code></p>
+<p>&nbsp;</p>
+<p>이런 형태가 된다. 이렇게 컨테이너를 만들고 실행해서 환경변수를 확인해보면</p>
+<p>&nbsp;</p>
+<p>[##_Image|kage@euRmFP/btrzvLhuPn8/KKB1Kwka4mDJjPEtxXtOOk/img.png|alignCenter|width="100%"|_##]</p>
+<p>HOSTNAME이라는 환경변수가 docker-desktop이라는 이름으로 고정되는 것을 확인할 수 있다. 그러니까 결국 컨테이너화해서 테스트해야할 어플리케이션이 있다면 HOSTNAME이라는 환경변수를 가져와 분기처리를 통해 local container에서 실행했을 때는 localhost의 어플리케이션을 참조할 수 있게 하면 된다.</p>
+<p>&nbsp;</p>
+<p>그건 그렇고 <code class='inline'>--network=host</code>라는 인수가 의미하는 것은 무엇일까. 간단하게 말하자면 container가 localhost의 네임스페이스를 공유하겠다고 선언하는 것이다. 예를 들어 리눅스 서버에서 nginx container를 실행시키고 포트를 매핑시키지 않으면 일반 사용자 입장에서는 서버 터미널에 접근하지 않는 한 해당 컨테이너에 접근할 방법이 없다. 그래서 보통 <code class='inline'>-p 80:80</code>이런식으로 옵션을 줘서 컨테이너로 향하는 포트를 열어둔다. 이는 docker contatiner들이 사용하고 있는 network namespace가 local machine과는 구분돼있기 때문인데 저 옵션을 주면 docker container에서 사용하는 port들이 -p 옵션으로 매핑시키지 않더라도 직접 노출이 된다. 위에 말한대로 localhost와 network namespace를 공유하겠다는 설정이니 말이다.</p>
+<p>그러니까 결국 <code class='inline'>--network=host</code>옵션을 주면 nginx container를 실행시키고 따로 -p옵션을 주지 않아도 해당 서버의 80번 포트에 접근하면 nginx container에 접근할 수 있게 되는 것이다. 자세한 내용은 <a href='https://docs.docker.com/network/network-tutorial-host/' target="_blank">host network에 관한 도커 공식문서</a>에 나와있으니 한번 읽어보는 것도 좋을 것이다.</p>
+<p>&nbsp;</p>
+<p>아, 물론 가장 중요한 점은</p>
+<p>&nbsp;</p>
+<p>[##_Image|kage@EsabQ/btrzwPQ1mPs/pOKzQGIp7sh1xk7jrOLXgk/img.png|alignCenter|width="100%"|_##]</p>
+<p>일반적인 개발환경(윈도우, 맥 등)에서는 host networking driver를 지원하지 않는다. 그러니 내가 위에 적어둔 과정(nginx container를 port mapping없이 접근하는 것)을 mac이나 windows에서 직접 재현해보려하지 않길 바라는 바이다. 나도 왜안되나 하다가 저걸 제일 나중에 읽었다. ㅠㅠ</p>
+<p>&nbsp;</p>
