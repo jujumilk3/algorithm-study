@@ -1,0 +1,405 @@
+<h4 >github actions의 자세한 실행환경 + 요청 IP 알아보기</h4>
+<p>업무 중 이런 일이 있었다. 온프레미스로 운용되고 있는 서버에 gitOps를 도입해야 했지만 k8s상에서 노드로 잡혀 있는 서버가 아니었으므로 argoCD같은 걸로 디플로이먼트가 참조하여 서비스를 갱신할 수 있을만 한 manifest파일도 없었다. 결국 github actions상에서 ssh 접속을 통해 이미지를 pull 받는 스크립트를 실행하는 형태로 구현하는 것으로 가닥이 잡혔는데 이상하게 접속이 안되는 것이다. 내가 이럴 때마다 자주 표현하는 방식이 있는데 진짜 때려 죽여도 접속이 안됐다.</p>
+<p>&nbsp;</p>
+<p>그때 사용했던 건 <a href='https://github.com/appleboy/ssh-action' target='_blank' class='url'>https://github.com/appleboy/ssh-action</a> 여기서 제공하는 action이었다. 그래서 혹시 이 프로젝트에 문제가 있나 싶어서 내 개인서버로 접속을 해봤는데 아주 잘 됐다. </p>
+<p>&nbsp;</p>
+<p>내가 진행했던 업무가 아니라 해당 부분에 대한 도움을 요청받은 상태였으므로 어떻게든 해결해드리고 싶었는데 말 그대로 때려 죽여도 안되니까 몇가지 가설을 세워서 증명해보는 식으로 디렉션을 드렸다. 나도 내 업무를 해야하니까...<br/>&nbsp;그 중 하나가 혹시 온프레미스 서버가 설치돼있는 곳의 접속 환경이 DDOS공격이나 기타 해킹공격 등에 대한 보안조치를 위해 해외접속을 막아놨을 수도 있다. github actions의 실행환경이 분명히 외국일테니 개인 aws계정으로 해외 리젼에 ec2 instance를 하나 만들어 접속을 시도해보는 방향으로 확인을 해보고 해외에서의 접속이 막혀있는 게 맞으면 다른 방법을 강구해야할 것 같다고 하였는데 직접 동료분이 해외 리젼에서 생성한 ec2 instance에서의 접근이 안되는 걸 확인하셨고 앤서블이나 테라폼 등 다른 배포 스크립트를 작성하는 것으로 방향이 바뀌었다.</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>에피소드는 여기까지이고, 그렇다면 대체 github actions의 구체적인 실행환경은 어떻게 구성돼있을까 궁금해졌다. 단순 shell상에서 확인해볼 수 있는 ip정보와 환경변수들부터 실제로 실행되고 있는 지역이나 요청하는 ip까지. 물론 github actions의 runs-on option에 따라 실행환경은 크게 달라지겠지만 일반목적의 ci/cd일 경우 ubuntu-latest를 쓸 것이므로 <code class="inline">runs-on: ubuntu-latest</code>의 케이스에서만 확인해볼 것이다. 테스트는 모두 여러 포스트에서 언급했던 내 인프라 스터디용 레포지토리에서 진행할 것이다(<a href='https://github.com/jujumilk3/infra-study' target='_blank' class='url'>https://github.com/jujumilk3/infra-study</a>)</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>먼저 간단한 action script를 작성해 실행환경을 확인해보자. 스크립트는 이렇게 작성했다.</p>
+<pre class="line-numbers"><code class='language-yaml' lang='yaml'>name: Check ENV
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Check runner
+      run: whoami
+
+    - name: Check pwd
+      run: pwd
+
+    - name: Check ifconfig
+      run: ifconfig
+
+    - name: Check ENV
+      run: env
+
+    - name: Check pocesses
+      run: ps -ef
+
+</code></pre>
+<p>위 스크립트가 실행된 결과는 <a href='https://github.com/jujumilk3/infra-study/runs/6237266150?check_suite_focus=true' target='_blank' class='url'>https://github.com/jujumilk3/infra-study/runs/6237266150?check_suite_focus=true</a> 여기서 확인할 수 있다.</p>
+<p>&nbsp;</p>
+<p>정보들을 살펴보면 다음과 같다.</p>
+<pre class="line-numbers"><code class='language-shell' lang='shell'>Run whoami
+  whoami
+  shell: /usr/bin/bash -e {0}
+runner
+</code></pre>
+<p>실행 계정은 runner이다. runner를 체크해보고 싶어서 Check runner라고 했는데 실행자가 runner여서 신기했다. 그리고 및에 <code class="inline">shell</code>을 따로 지정해주지 않으면 기본값은 bashShell인 것으로 확인됐다.</p>
+<p>&nbsp;</p>
+<pre class="line-numbers"><code class='language-shell' lang='shell'>Run pwd
+  pwd
+  shell: /usr/bin/bash -e {0}
+/home/runner/work/infra-study/infra-study
+</code></pre>
+<p>실행 디렉토리는 <code class="inline">/home/runner/work/{repo_name}/{repo_name}</code>이다.</p>
+<p>&nbsp;</p>
+<pre class="line-numbers"><code class='language-shell' lang='shell'>Run ifconfig
+  ifconfig
+  shell: /usr/bin/bash -e {0}
+docker0: flags=4099&lt;UP,BROADCAST,MULTICAST&gt;  mtu 1500
+        inet 172.17.0.1  netmask 255.255.0.0  broadcast 172.17.255.255
+        ether 02:42:50:b8:64:02  txqueuelen 0  (Ethernet)
+        RX packets 0  bytes 0 (0.0 B)
+        RX errors 0  dropped 0  overruns 0  frame 0
+        TX packets 0  bytes 0 (0.0 B)
+        TX errors 0  dropped 0 overruns 0  carrier 0  collisions 0
+
+eth0: flags=4163&lt;UP,BROADCAST,RUNNING,MULTICAST&gt;  mtu 1500
+        inet 10.1.0.112  netmask 255.255.0.0  broadcast 10.1.255.255
+        inet6 fe80::20d:3aff:fe5f:1a5c  prefixlen 64  scopeid 0x20&lt;link&gt;
+        ether 00:0d:3a:5f:1a:5c  txqueuelen 1000  (Ethernet)
+        RX packets 4545  bytes 5844395 (5.8 MB)
+        RX errors 0  dropped 0  overruns 0  frame 0
+        TX packets 621  bytes 198256 (198.2 KB)
+        TX errors 0  dropped 0 overruns 0  carrier 0  collisions 0
+
+lo: flags=73&lt;UP,LOOPBACK,RUNNING&gt;  mtu 65536
+        inet 127.0.0.1  netmask 255.0.0.0
+        inet6 ::1  prefixlen 128  scopeid 0x10&lt;host&gt;
+        loop  txqueuelen 1000  (Local Loopback)
+        RX packets 150  bytes 17990 (17.9 KB)
+        RX errors 0  dropped 0  overruns 0  frame 0
+        TX packets 150  bytes 17990 (17.9 KB)
+        TX errors 0  dropped 0 overruns 0  carrier 0  collisions 0
+</code></pre>
+<p>도커 네트워크와 연결돼있는 걸 확인할 수 있다. github actions 실행환경 자체는 docker network내부일 수도 있고 혹은 docker machine이 돌아가고 있는 호스트일 수도 있지만 아무튼 도커를 활용할 수 있다는 점은 확인할 수 있다. marketplace에 출시하는 오픈소스형 github actions가 js나 docker, 혹은 shell script형태로 제공되는데 이를 위한 설정인 것으로 생각된다.</p>
+<p>&nbsp;</p>
+<pre class="line-numbers"><code class='language-shell' lang='shell'>Run env
+  env
+  shell: /usr/bin/bash -e {0}
+SELENIUM_JAR_PATH=/usr/share/java/selenium-server.jar
+GOROOT_1_17_X64=/opt/hostedtoolcache/go/1.17.9/x64
+CONDA=/usr/share/miniconda
+GITHUB_WORKSPACE=/home/runner/work/infra-study/infra-study
+JAVA_HOME_11_X64=/usr/lib/jvm/temurin-11-jdk-amd64
+GITHUB_PATH=/home/runner/work/_temp/_runner_file_commands/add_path_167b1bc0-7722-4cc5-8354-b6dbb23f85ef
+GITHUB_ACTION=__run_4
+JAVA_HOME=/usr/lib/jvm/temurin-11-jdk-amd64
+GITHUB_RUN_NUMBER=1
+RUNNER_NAME=Hosted Agent
+GRADLE_HOME=/usr/share/gradle-7.4.2
+XDG_CONFIG_HOME=/home/runner/.config
+DOTNET_SKIP_FIRST_TIME_EXPERIENCE=1
+ANT_HOME=/usr/share/ant
+JAVA_HOME_8_X64=/usr/lib/jvm/temurin-8-jdk-amd64
+HOMEBREW_PREFIX=/home/linuxbrew/.linuxbrew
+GITHUB_REF_TYPE=branch
+HOMEBREW_CLEANUP_PERIODIC_FULL_DAYS=3650
+BOOTSTRAP_HASKELL_NONINTERACTIVE=1
+***
+PIPX_BIN_DIR=/opt/pipx_bin
+DEPLOYMENT_BASEPATH=/opt/runner
+GITHUB_ACTIONS=true
+ANDROID_NDK_LATEST_HOME=/usr/local/lib/android/sdk/ndk/23.1.7779620
+GITHUB_SHA=1d2fab7060000ce947b8b78c0a7b8c35044c9b28
+POWERSHELL_DISTRIBUTION_CHANNEL=GitHub-Actions-ubuntu20
+DOTNET_MULTILEVEL_LOOKUP=0
+GITHUB_REF=refs/heads/main
+RUNNER_OS=Linux
+GITHUB_REF_PROTECTED=false
+HOME=/home/runner
+GITHUB_API_URL=https://api.github.com
+LANG=C.UTF-8
+RUNNER_TRACKING_ID=github_3c2263ce-dab2-49cc-b8ea-7ff6bc2d6ec2
+STATS_KEEPALIVE=false
+RUNNER_ARCH=X64
+RUNNER_TEMP=/home/runner/work/_temp
+GITHUB_ENV=/home/runner/work/_temp/_runner_file_commands/set_env_167b1bc0-7722-4cc5-8354-b6dbb23f85ef
+GITHUB_EVENT_PATH=/home/runner/work/_temp/_github_workflow/event.json
+INVOCATION_ID=d362fbb7918a4d3b88867106d7cc3cf8
+GITHUB_EVENT_NAME=push
+GITHUB_RUN_ID=2248604498
+JAVA_HOME_17_X64=/usr/lib/jvm/temurin-17-jdk-amd64
+ANDROID_NDK_HOME=/usr/local/lib/android/sdk/ndk-bundle
+GITHUB_STEP_SUMMARY=/home/runner/work/_temp/_runner_file_commands/step_summary_167b1bc0-7722-4cc5-8354-b6dbb23f85ef
+HOMEBREW_NO_AUTO_UPDATE=1
+GITHUB_ACTOR=jujumilk3
+NVM_DIR=/home/runner/.nvm
+SGX_AESM_ADDR=1
+GITHUB_RUN_ATTEMPT=1
+ANDROID_HOME=/usr/local/lib/android/sdk
+GITHUB_GRAPHQL_URL=https://api.github.com/graphql
+RUNNER_USER=runner
+ACCEPT_EULA=Y
+USER=runner
+GITHUB_SERVER_URL=https://github.com
+HOMEBREW_CELLAR=/home/linuxbrew/.linuxbrew/Cellar
+PIPX_HOME=/opt/pipx
+GECKOWEBDRIVER=/usr/local/share/gecko_driver
+CHROMEWEBDRIVER=/usr/local/share/chrome_driver
+SHLVL=1
+ANDROID_SDK_ROOT=/usr/local/lib/android/sdk
+VCPKG_INSTALLATION_ROOT=/usr/local/share/vcpkg
+RUNNER_TOOL_CACHE=/opt/hostedtoolcache
+HOMEBREW_REPOSITORY=/home/linuxbrew/.linuxbrew/Homebrew
+ImageVersion=20220425.1
+DOTNET_NOLOGO=1
+GITHUB_REF_NAME=main
+STATS_PFS=true
+GRAALVM_11_ROOT=/usr/local/graalvm/graalvm-ce-java11-22.0.0.2
+GITHUB_JOB=build
+AZURE_EXTENSION_DIR=/opt/az/azcliextensions
+PERFLOG_LOCATION_SETTING=RUNNER_PERFLOG
+GITHUB_REPOSITORY=jujumilk3/infra-study
+CHROME_BIN=/usr/bin/google-chrome
+ANDROID_NDK_ROOT=/usr/local/lib/android/sdk/ndk-bundle
+GOROOT_1_18_X64=/opt/hostedtoolcache/go/1.18.1/x64
+GITHUB_RETENTION_DAYS=90
+JOURNAL_STREAM=8:22769
+RUNNER_WORKSPACE=/home/runner/work/infra-study
+LEIN_HOME=/usr/local/lib/lein
+LEIN_JAR=/usr/local/lib/lein/self-installs/leiningen-2.9.8-standalone.jar
+GITHUB_ACTION_REPOSITORY=
+PATH=/home/linuxbrew/.linuxbrew/bin:/home/linuxbrew/.linuxbrew/sbin:/home/runner/.local/bin:/opt/pipx_bin:/home/runner/.cargo/bin:/home/runner/.config/composer/vendor/bin:/usr/local/.ghcup/bin:/home/runner/.dotnet/tools:/snap/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin
+RUNNER_PERFLOG=/home/runner/perflog
+GITHUB_BASE_REF=
+CI=true
+SWIFT_PATH=/usr/share/swift/usr/bin
+ImageOS=ubuntu20
+GITHUB_REPOSITORY_OWNER=jujumilk3
+GITHUB_HEAD_REF=
+GITHUB_ACTION_REF=
+GITHUB_WORKFLOW=Check ENV
+DEBIAN_FRONTEND=noninteractive
+AGENT_TOOLSDIRECTORY=/opt/hostedtoolcache
+GOROOT_1_16_X64=/opt/hostedtoolcache/go/1.16.15/x64
+_=/usr/bin/env
+</code></pre>
+<p>수많은 환경변수가 이미 선언돼있는 것을 확인할 수 있다. 하나하나 설명할 순 없고 대충 github actions가 어떤 인터프리터나 컴파일러를 기본적으로 제공하는지, <code class="inline">GITHUB_</code>라는 prefix로 선언돼있는 기본적인 환경변수들이 어떻게 저장돼있고 뭘 활용하면 좋을지 생각해보면 좋을 것이다. 참고로 중간에 보이는 ***은 github actions자체에서 사용하고 있는 외부에 노출되면 안되는 값이다. </p>
+<p>&nbsp;</p>
+<pre class="line-numbers"><code class='language-shell' lang='shell'>Run ps -ef
+  ps -ef
+  shell: /usr/bin/bash -e {0}
+UID          PID    PPID  C STIME TTY          TIME CMD
+root           1       0  8 02:03 ?        00:00:02 /sbin/init
+root           2       0  0 02:03 ?        00:00:00 [kthreadd]
+root           3       2  0 02:03 ?        00:00:00 [rcu_gp]
+root           4       2  0 02:03 ?        00:00:00 [rcu_par_gp]
+root           5       2  0 02:03 ?        00:00:00 [kworker/0:0-events]
+root           6       2  0 02:03 ?        00:00:00 [kworker/0:0H-events_highpri]
+root           7       2  0 02:03 ?        00:00:00 [kworker/0:1-cgroup_destroy]
+root           8       2  0 02:03 ?        00:00:00 [kworker/u4:0-events_unbound]
+root           9       2  0 02:03 ?        00:00:00 [mm_percpu_wq]
+root          10       2  0 02:03 ?        00:00:00 [rcu_tasks_rude_]
+root          11       2  0 02:03 ?        00:00:00 [rcu_tasks_trace]
+root          12       2  0 02:03 ?        00:00:00 [ksoftirqd/0]
+root          13       2  0 02:03 ?        00:00:00 [rcu_sched]
+root          14       2  0 02:03 ?        00:00:00 [migration/0]
+root          15       2  0 02:03 ?        00:00:00 [cpuhp/0]
+root          16       2  0 02:03 ?        00:00:00 [cpuhp/1]
+root          17       2  1 02:03 ?        00:00:00 [migration/1]
+root          18       2  0 02:03 ?        00:00:00 [ksoftirqd/1]
+root          19       2  0 02:03 ?        00:00:00 [kworker/1:0-cgroup_destroy]
+root          20       2  0 02:03 ?        00:00:00 [kworker/1:0H-kblockd]
+root          21       2  0 02:03 ?        00:00:00 [kdevtmpfs]
+root          22       2  0 02:03 ?        00:00:00 [netns]
+root          23       2  0 02:03 ?        00:00:00 [inet_frag_wq]
+root          24       2  0 02:03 ?        00:00:00 [kauditd]
+root          25       2  0 02:03 ?        00:00:00 [khungtaskd]
+root          26       2  0 02:03 ?        00:00:00 [oom_reaper]
+root          27       2  0 02:03 ?        00:00:00 [writeback]
+root          28       2  0 02:03 ?        00:00:00 [kcompactd0]
+root          29       2  0 02:03 ?        00:00:00 [ksmd]
+root          30       2  0 02:03 ?        00:00:00 [khugepaged]
+root          76       2  0 02:03 ?        00:00:00 [kintegrityd]
+root          77       2  0 02:03 ?        00:00:00 [kblockd]
+root          78       2  0 02:03 ?        00:00:00 [blkcg_punt_bio]
+root          79       2  0 02:03 ?        00:00:00 [tpm_dev_wq]
+root          80       2  0 02:03 ?        00:00:00 [ata_sff]
+root          81       2  0 02:03 ?        00:00:00 [md]
+root          82       2  0 02:03 ?        00:00:00 [edac-poller]
+root          83       2  0 02:03 ?        00:00:00 [hv_vmbus_con]
+root          84       2  0 02:03 ?        00:00:00 [hv_pri_chan]
+root          85       2  0 02:03 ?        00:00:00 [hv_sub_chan]
+root          86       2  0 02:03 ?        00:00:00 [devfreq_wq]
+root          87       2  0 02:03 ?        00:00:00 [kworker/1:1-events]
+root          88       2  0 02:03 ?        00:00:00 [watchdogd]
+root          89       2  0 02:03 ?        00:00:00 [kworker/u4:1-ext4-rsv-conversion]
+root          90       2  0 02:03 ?        00:00:00 [kworker/0:1H-kblockd]
+root          92       2  0 02:03 ?        00:00:00 [kswapd0]
+root          93       2  0 02:03 ?        00:00:00 [ecryptfs-kthrea]
+root          95       2  0 02:03 ?        00:00:00 [kthrotld]
+root          96       2  0 02:03 ?        00:00:00 [nfit]
+root          97       2  0 02:03 ?        00:00:00 [scsi_eh_0]
+root          98       2  0 02:03 ?        00:00:00 [kworker/u4:2-events_unbound]
+root          99       2  0 02:03 ?        00:00:00 [scsi_tmf_0]
+root         100       2  0 02:03 ?        00:00:00 [nvme-wq]
+root         101       2  0 02:03 ?        00:00:00 [scsi_eh_1]
+root         102       2  0 02:03 ?        00:00:00 [kworker/u4:3-events_unbound]
+root         103       2  0 02:03 ?        00:00:00 [nvme-reset-wq]
+root         104       2  0 02:03 ?        00:00:00 [nvme-delete-wq]
+root         105       2  0 02:03 ?        00:00:00 [scsi_eh_2]
+root         106       2  0 02:03 ?        00:00:00 [kworker/u4:4-ext4-rsv-conversion]
+root         107       2  0 02:03 ?        00:00:00 [scsi_tmf_1]
+root         108       2  0 02:03 ?        00:00:00 [scsi_tmf_2]
+root         109       2  0 02:03 ?        00:00:00 [scsi_eh_3]
+root         110       2  0 02:03 ?        00:00:00 [storvsc_error_w]
+root         111       2  0 02:03 ?        00:00:00 [scsi_tmf_3]
+root         112       2  0 02:03 ?        00:00:00 [scsi_eh_4]
+root         113       2  0 02:03 ?        00:00:00 [scsi_tmf_4]
+root         114       2  0 02:03 ?        00:00:00 [scsi_eh_5]
+root         115       2  0 02:03 ?        00:00:00 [scsi_tmf_5]
+root         116       2  0 02:03 ?        00:00:00 [kworker/u4:5-ext4-rsv-conversion]
+root         117       2  0 02:03 ?        00:00:00 [storvsc_error_w]
+root         118       2  0 02:03 ?        00:00:00 [kworker/u4:6-events_unbound]
+root         119       2  0 02:03 ?        00:00:00 [storvsc_error_w]
+root         120       2  0 02:03 ?        00:00:00 [storvsc_error_w]
+root         121       2  0 02:03 ?        00:00:00 [vfio-irqfd-clea]
+root         122       2  0 02:03 ?        00:00:00 [kworker/u4:7]
+root         123       2  0 02:03 ?        00:00:00 [kworker/0:2-events]
+root         124       2  0 02:03 ?        00:00:00 [kworker/1:1H-kblockd]
+root         125       2  0 02:03 ?        00:00:00 [mld]
+root         126       2  0 02:03 ?        00:00:00 [ipv6_addrconf]
+root         135       2  0 02:03 ?        00:00:00 [kstrp]
+root         138       2  0 02:03 ?        00:00:00 [zswap-shrink]
+root         139       2  0 02:03 ?        00:00:00 [kworker/u5:0]
+root         144       2  0 02:03 ?        00:00:00 [jbd2/sda1-8]
+root         145       2  0 02:03 ?        00:00:00 [ext4-rsv-conver]
+root         191       1  1 02:03 ?        00:00:00 /lib/systemd/systemd-journald
+root         208       2  0 02:03 ?        00:00:00 [ipmi-msghandler]
+root         212       2  0 02:03 ?        00:00:00 [kworker/1:2-events]
+root         215       1  0 02:03 ?        00:00:00 /lib/systemd/systemd-fsckd
+root         226       1  0 02:03 ?        00:00:00 /lib/systemd/systemd-udevd
+root         251       2  0 02:03 ?        00:00:00 [hv_balloon]
+root         254       2  0 02:03 ?        00:00:00 [cryptd]
+root         272       2  0 02:03 ?        00:00:00 [kworker/1:3-events]
+root         281       2  0 02:03 ?        00:00:00 bpfilter_umh
+root         282       2  0 02:03 ?        00:00:00 [kworker/0:3-cgroup_destroy]
+root         311       2  0 02:03 ?        00:00:00 [kworker/0:4]
+root         318       1  0 02:03 ?        00:00:00 /usr/lib/linux-tools/5.13.0-1022-azure/hv_kvp_daemon -n
+root         397       2  0 02:03 ?        00:00:00 [kaluad]
+root         398       2  0 02:03 ?        00:00:00 [kmpath_rdacd]
+root         399       2  0 02:03 ?        00:00:00 [kmpathd]
+root         400       2  0 02:03 ?        00:00:00 [kmpath_handlerd]
+root         401       1  0 02:03 ?        00:00:00 /sbin/multipathd -d -s
+root         411       2  0 02:03 ?        00:00:00 [loop0]
+root         415       2  0 02:03 ?        00:00:00 [loop1]
+root         420       2  0 02:03 ?        00:00:00 [loop2]
+root         424       2  0 02:03 ?        00:00:00 [loop3]
+root         457       1  0 02:03 ?        00:00:00 /usr/sbin/haveged --Foreground --verbose=1 -w 1024
+systemd+     540       1  0 02:03 ?        00:00:00 /lib/systemd/systemd-networkd
+systemd+     542       1  0 02:03 ?        00:00:00 /lib/systemd/systemd-resolved
+root         614       2  0 02:03 ?        00:00:00 [jbd2/sdb1-8]
+root         615       2  0 02:03 ?        00:00:00 [ext4-rsv-conver]
+root         658       1  0 02:03 ?        00:00:00 /usr/lib/accountsservice/accounts-daemon
+root         666       1  0 02:03 ?        00:00:00 /usr/sbin/cron -f
+message+     667       1  0 02:03 ?        00:00:00 /usr/bin/dbus-daemon --system --address=systemd: --nofork --nopidfile --systemd-activation --syslog-only
+root         674       1  0 02:03 ?        00:00:00 /usr/sbin/irqbalance --foreground
+root         676       1  0 02:03 ?        00:00:00 /usr/bin/python3 /usr/bin/networkd-dispatcher --run-startup-triggers
+root         679       1  0 02:03 ?        00:00:00 php-fpm: master process (/etc/php/7.4/fpm/php-fpm.conf)
+root         680       1  0 02:03 ?        00:00:00 php-fpm: master process (/etc/php/8.0/fpm/php-fpm.conf)
+root         681       1  0 02:03 ?        00:00:00 php-fpm: master process (/etc/php/8.1/fpm/php-fpm.conf)
+root         682       1  0 02:03 ?        00:00:00 /usr/lib/policykit-1/polkitd --no-debug
+syslog       685       1  0 02:03 ?        00:00:00 /usr/sbin/rsyslogd -n -iNONE
+root         686       1  5 02:03 ?        00:00:01 /opt/runner/provisioner/provisioner --agentdirectory /home/runner/runners --settings /opt/runner/provisioner/.settings
+_chrony      701       1  0 02:03 ?        00:00:00 /usr/sbin/chronyd -F -1
+root         704       1  6 02:03 ?        00:00:01 /usr/lib/snapd/snapd
+_chrony      708     701  0 02:03 ?        00:00:00 /usr/sbin/chronyd -F -1
+root         709       1  0 02:03 ?        00:00:00 /lib/systemd/systemd-logind
+root         714       1  0 02:03 ?        00:00:00 /usr/lib/udisks2/udisksd
+root         718       1  1 02:03 ?        00:00:00 /usr/bin/python3 -u /usr/sbin/waagent -daemon
+daemon       721       1  0 02:03 ?        00:00:00 /usr/sbin/atd -f
+root         724       1  0 02:03 ?        00:00:00 /usr/bin/containerd
+root         734       1  0 02:03 ?        00:00:00 sshd: /usr/sbin/sshd -D [listener] 0 of 10-100 startups
+root         741       1  0 02:03 ?        00:00:00 /usr/sbin/ModemManager
+root         751       1  0 02:03 ttyS0    00:00:00 /sbin/agetty -o -p -- \u --keep-baud 115200,38400,9600 ttyS0 vt220
+www-data     774       1  3 02:03 ?        00:00:00 /usr/bin/mono /usr/lib/mono/4.5/xsp4.exe --port 8084 --address 0.0.0.0 --appconfigdir /etc/xsp4 --nonstop
+root         781       1  0 02:03 tty1     00:00:00 /sbin/agetty -o -p -- \u --noclear tty1 linux
+root         890     718  3 02:03 ?        00:00:00 python3 -u bin/WALinuxAgent-2.7.1.0-py2.7.egg -run-exthandlers
+www-data     893     679  0 02:03 ?        00:00:00 php-fpm: pool www
+www-data     894     679  0 02:03 ?        00:00:00 php-fpm: pool www
+www-data     896     680  0 02:03 ?        00:00:00 php-fpm: pool www
+www-data     897     681  0 02:03 ?        00:00:00 php-fpm: pool www
+www-data     898     681  0 02:03 ?        00:00:00 php-fpm: pool www
+www-data     903     680  0 02:03 ?        00:00:00 php-fpm: pool www
+root         932       1  0 02:03 ?        00:00:00 /usr/bin/dockerd -H fd:// --containerd /var/run/containerd/containerd.sock
+root        1342       1  0 02:03 ?        00:00:00 /lib/systemd/systemd-timedated
+root        1433     686  0 02:03 ?        00:00:00 /opt/runner/provisioner/etc/provjobd
+runner      1441     686 30 02:03 ?        00:00:01 /home/runner/runners/2.290.1/bin/Runner.Listener run
+runner      1459    1441 60 02:04 ?        00:00:01 /home/runner/runners/2.290.1/bin/Runner.Worker spawnclient 112 115
+runner      1482    1459  0 02:04 ?        00:00:00 /usr/bin/bash -e /home/runner/work/_temp/06ab4e0d-dd52-4168-b3f7-9ca78d7e5c8d.sh
+runner      1483    1482  0 02:04 ?        00:00:00 ps -ef
+</code></pre>
+<p>실행되고 있는 프로세스 목록인데 php-fpm부터 dockerd등 여러 눈에 띄는 프로세스가 눈에 띈다.</p>
+<p>&nbsp;</p>
+<p>실행환경은 이정도로 구성돼있고, 실행하는 위치가 궁금해졌다. 임시로 ip를 수집하는 api를 하나 제작해서 github actions에서 날리는 request가 어떤 정보를 담고 있는지 확인해보려 한다. 그래서 간단하게 django에 api요청을 풀어서 print하는 view를 하나 작성해봤다. 마찬가지로 같은 repository에서 진행했다. (<a href='https://github.com/jujumilk3/infra-study' target='_blank' class='url'>https://github.com/jujumilk3/infra-study</a>)</p>
+<pre class="line-numbers"><code class='language-python' lang='python'>from django.views import View
+from django.http import JsonResponse
+
+
+class CheckIpView(View):
+    def get(self, request, *args, **kwargs):
+        print(request.__dict__)
+        return JsonResponse({
+            &#39;hello&#39;: &#39;world&#39;
+        })
+
+</code></pre>
+<p>이런식으로 초 심플하게 request를 extract하는 view를 하나 작성한 뒤에 그냥 local machine에서 실행시키고 포트포워딩으로 외부에 노출시킬 예정이다. 배포까지 할려면 넘 귀찮으니까...</p>
+<p>&nbsp;</p>
+[##_Image|kage@pPV5P/btrARKPeIFz/pKyd3YAEXwJBcw6PDu0a6k/img.jpg|alignCenter|width="100%"|_##]
+<p>핸드폰으로 접속했을 때 멀쩡하게 작동되는 것을 확인했다. </p>
+[##_Image|kage@cDSiqB/btrAQ7c3L1F/n62DRi8neiDZbOtQMARj1K/img.png|alignCenter|width="100%"|_##]
+<p>내 핸드폰 아이이피는 이렇게 돼있구나. 확인됐다. 이번엔 github actions에서 request를 날려보자.</p>
+<pre class="line-numbers"><code class='language-yaml' lang='yaml'>name: Check ENV
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    # ip를 check하는 명령어를 추가
+    - name: Check ip
+      run: curl -X GET 180.229.80.50:8000/api/check-ip
+
+    - name: Check runner
+      run: whoami
+
+    - name: Check pwd
+      run: pwd
+
+    - name: Check ifconfig
+      run: ifconfig
+
+    - name: Check ENV
+      run: env
+
+    - name: Check pocesses
+      run: ps -ef
+
+</code></pre>
+[##_Image|kage@q4xJv/btrATcEcHPb/z242B0MEiaCyNUR4LdmnMk/img.png|alignCenter|width="100%"|_##]
+<p>GA상에서 잘 실행된 걸 확인할 수 있다. (<a href='https://github.com/jujumilk3/infra-study/runs/6237837929?check_suite_focus=true' target='_blank' class='url'>https://github.com/jujumilk3/infra-study/runs/6237837929?check_suite_focus=true</a>)</p>
+<p>어떤 아이피가 찍혔나 확인해보면</p>
+[##_Image|kage@bwO9iA/btrAQHlnZ4q/fP5fR0IkR0V5i4d5rWKN31/img.png|alignCenter|width="100%"|_##]
+<p>찾았다 네이놈. 해당 아이피를 조회해서 어떤곳인지 알아보자. <a href='https://www.iplocation.net/ip-lookup' target='_blank' class='url'>https://www.iplocation.net/ip-lookup</a> 여기에 아이피를 치면 어떤 곳의 ip인지 확인할 수 있다.</p>
+[##_Image|kage@nZAxM/btrATeaXDNM/Ey2Ttk0DbJdJui9DtUJZ3K/img.png|alignCenter|width="100%"|_##]
+<p>확인해보니 아이오와주에 있는 마이크로소프트의 ip주소였다. </p>
+<p>&nbsp;</p>
+<p>근데 한번만 진행해본 것이므로 진행할 때마다 ip주소가 바뀔 가능성이 있다. 만약에 지금 온프레미스 서버 상태에서 위 ip만 연다거나 혹은 위 지역의 접근만 연다 해도 과연 항상 신뢰할 수 있는 동작을 할까? 그것은 장담할 수 없다.</p>
+<p>&nbsp;</p>
+<p>github actions를 도입하는 과정에서 환경과 관련된 문제가 있다면 위에 있는 내역들을 한번 점검해보는 것이 좋을 것이다..</p>
+<p>&nbsp;</p>
