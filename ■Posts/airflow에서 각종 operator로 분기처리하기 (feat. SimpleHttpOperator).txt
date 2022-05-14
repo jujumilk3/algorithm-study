@@ -1,0 +1,215 @@
+<h4 >airflow에서 각종 operator로 분기처리하기 (feat. SimpleHttpOperator)</h4>
+<p>airflow의 기본적인 tutorial에서 제공되는 <code class="inline">BranchPythonOperator</code>처럼 조건에 따라 여러개의 branch를 태우는 방법에 대해서 고민했다. 나는 당연히 SimpleHttpOperator도, BashOperator도 branch operator가 따로 존재할 줄 알았는데 오직 <code class="inline">BranchPythonOperator</code>만 존재했다.</p>
+<p>왜 branch operator가 중요하냐, 다른 operator는 True와 False만으로 분기처리를 해야하고, 조건에 따른 다음 task는 triger_rule을 이용해 컨트롤해야 하므로 보다 복잡한 분기처리가 불가능하다는 문제가 있었다.</p>
+<p>&nbsp;</p>
+<p>예를 들어 전 base_task에서 1이라는 결과값을 받으면 task1을,<br/>base_task에서 2라는 결과값을 받으면 task2를,<br/>base_task에서 3이라는 결과값을 받으면 task3을...</p>
+<p>&nbsp;</p>
+<p>만약에 base_task가 <code class="inline">BranchPythonOperator</code>라면 저런 분기처리가 가능하지만 다른 Operator라면 불가능하다. <code class="inline">BranchPythonOperator</code>만이 오직 return값을 task_id라는 문자열로 반환하여 해당 task를 다음에 실행시킬 수 있기 때문이다. 위에서도 말했듯이 다른 Operator는 True or False에 대한 반환만 가능하다.</p>
+<p>&nbsp;</p>
+<p>그래서 결론은 뭐냐, 어떠한 Operator의 결과값에 따라 task 분기를 태우기 위해선 결과값을 기준으로 분기를 나눠주는 <code class="inline">BranchPythonOperator</code>를 중간에 넣어줘야 한다. 그리고 결과값을 다른 task로 넘기기 위해서는 XComs를 써야 한다.</p>
+<p>&nbsp;</p>
+<p>설명을 일일히 하기는 분량이 길어질 것 같고 샘플로 제작한 webserver와 dag를 통해 어떻게 동작하는지 확인해볼 수 있다. 원본 코드가 포함된 저장소는 <a href='https://github.com/jujumilk3/airflow-study' target='_blank' class='url'>https://github.com/jujumilk3/airflow-study</a> 여기에 있다.</p>
+<p>&nbsp;</p>
+<p>webserver는 일부러 그 어떤 framework도 사용하지 않고 apache-airflow를 설치할 때 같이 설치되는 requests를 이용해 작동하게 제작하였다.</p>
+<pre class='line-numbers'><code class='language-python' lang='python'># webserver.py
+from http.server import BaseHTTPRequestHandler, HTTPServer
+from time import sleep
+import logging
+import random
+import json
+
+
+class S(BaseHTTPRequestHandler):
+    def _set_response(self, status_code=200):
+        self.send_response(status_code)
+        self.send_header(&#39;Content-type&#39;, &#39;application/json&#39;)
+        self.end_headers()
+
+    def response(self, response_dict: dict):
+        self.wfile.write(json.dumps(response_dict).encode(&#39;utf-8&#39;))
+
+    def do_GET(self):
+        logging.info(&quot;GET request,\nPath: %s\nHeaders:\n%s\n&quot;, str(self.path), str(self.headers))
+        if str(self.path) == &#39;/airflow/base-task&#39;:
+            work_rand = random.randrange(0, 10)
+            success = True if work_rand else False  # 0에서 9까지 나오므로 1/10 확률로 실패
+            if success:
+                self._set_response(200)
+                response = {
+                    &#39;status&#39;: &#39;success&#39;,
+                    &#39;msg&#39;: &#39;hi&#39;,
+                    &#39;next_task_number&#39;: (work_rand % 3) + 1
+                }
+                self.response(response)
+
+            else:
+                self._set_response(404)
+                response = {
+                    &#39;status&#39;: &#39;failed&#39;,
+                    &#39;msg&#39;: &#39;bye&#39;
+                }
+                self.response(response)
+
+        elif str(self.path) == &#39;/airflow/dummy-task1&#39;:
+            self._set_response(200)
+            response = airflow_dummy_task1()
+            self.response(response)
+
+        elif str(self.path) == &#39;/airflow/dummy-task2&#39;:
+            self._set_response(200)
+            response = airflow_dummy_task2()
+            self.response(response)
+
+        elif str(self.path) == &#39;/airflow/dummy-task3&#39;:
+            self._set_response(200)
+            response = airflow_dummy_task3()
+            self.response(response)
+
+    def do_POST(self):
+        content_length = int(self.headers[&#39;Content-Length&#39;])  # &lt;--- Gets the size of data
+        post_data = self.rfile.read(content_length)  # &lt;--- Gets the data itself
+        logging.info(&quot;POST request,\nPath: %s\nHeaders:\n%s\n\nBody:\n%s\n&quot;,
+                     str(self.path), str(self.headers), post_data.decode(&#39;utf-8&#39;))
+
+        self._set_response()
+        self.wfile.write(&quot;POST request for {}&quot;.format(self.path).encode(&#39;utf-8&#39;))
+
+
+def airflow_dummy_task1():
+    count = random.randrange(1, 10)  # 최대 9초가 걸리는 dummy task
+    while count:
+        count -= 1
+        sleep(1)
+    return {&#39;msg&#39;: &#39;dummy_task1&#39;, &#39;status&#39;: &#39;success&#39;}
+
+
+def airflow_dummy_task2():
+    count = random.randrange(1, 10)  # 최대 9초가 걸리는 dummy task
+    while count:
+        count -= 1
+        sleep(1)
+    return {&#39;msg&#39;: &#39;dummy_task2&#39;, &#39;status&#39;: &#39;success&#39;}
+
+
+def airflow_dummy_task3():
+    count = random.randrange(1, 10)  # 최대 9초가 걸리는 dummy task
+    while count:
+        count -= 1
+        sleep(1)
+    return {&#39;msg&#39;: &#39;dummy_task3&#39;, &#39;status&#39;: &#39;success&#39;}
+
+
+def run(server_class=HTTPServer, handler_class=S, port=8000):
+    logging.basicConfig(level=logging.INFO)
+    server_address = (&#39;&#39;, port)
+    httpd = server_class(server_address, handler_class)
+    logging.info(&#39;Starting httpd...\n&#39;)
+    try:
+        httpd.serve_forever()
+    except KeyboardInterrupt:
+        pass
+    httpd.server_close()
+    logging.info(&#39;Stopping httpd...\n&#39;)
+
+
+if __name__ == &#39;__main__&#39;:
+    from sys import argv
+
+    if len(argv) == 2:
+        run(port=int(argv[1]))
+    else:
+        run()
+</code></pre>
+<p>아래 dag를 참고하면 XComs와 BranchPythonOperator를 이용해 전 task의 결과값을 어떻게 다음 task로 넘기고 그 결과값으로 어떻게 분기처리를 하는지 확인할 수 있을 것이다.</p>
+<pre class='line-numbers'><code class='language-python' lang='python'># http_xcom_sample.py
+import json
+from datetime import datetime, timedelta
+
+from airflow import DAG
+from airflow.providers.http.operators.http import SimpleHttpOperator
+from airflow.operators.python import PythonOperator, BranchPythonOperator
+from airflow.utils.trigger_rule import TriggerRule
+
+
+def handle_response(response, **context):
+    print(response)
+    print(response.__dict__)
+    print(response.content)
+    response_json_as_dict = json.loads(response.content)
+    print(response_json_as_dict)
+    if str(response.status_code).startswith(&#39;2&#39;):  # to catch 2XX http status code
+        context[&#39;task_instance&#39;].xcom_push(key=&#39;base_task_xcom&#39;, value=&#39;success&#39;)  # 이건 안됨이 아니라 잘됨.
+        context[&#39;task_instance&#39;].xcom_push(key=&#39;second_task_number&#39;, value=response_json_as_dict.get(&#39;next_task_number&#39;, 1))
+        return True
+    else:
+        context[&#39;task_instance&#39;].xcom_push(key=&#39;base_task_xcom&#39;, value=&#39;fail&#39;)  # 애초에 다음으로 진행이 안되니 무의미
+        return False
+
+
+def treat_as_branch(**context):
+    print(&quot;Here is treat_as_branch&quot;)
+    print(context)
+    base_task_result = context[&#39;task_instance&#39;].xcom_pull(key=&#39;base_task_xcom&#39;)
+    next_task_number = context[&#39;task_instance&#39;].xcom_pull(key=&#39;second_task_number&#39;)
+    print(&quot;This is base_task_result&quot;)
+    print(base_task_result)
+    return &#39;http_dummy_task&#39; + str(next_task_number)
+
+
+def complete(**context):
+    print(context)
+
+
+with DAG(
+    dag_id=&#39;http_xcom_sample&#39;,
+    description=&#39;A simple http DAG&#39;,
+    schedule_interval=timedelta(hours=1),
+    start_date=datetime(2021, 1, 1),
+    catchup=False,
+    tags=[&#39;example&#39;],
+) as dag:
+    base_task = SimpleHttpOperator(
+        task_id=&#39;base_task&#39;,
+        method=&#39;GET&#39;,
+        endpoint=&#39;/airflow/base-task&#39;,
+        http_conn_id=&#39;localhost&#39;,
+        response_check=handle_response,
+    )
+
+    branch_task = BranchPythonOperator(
+        task_id=&#39;branch_task&#39;,
+        python_callable=treat_as_branch
+    )
+
+    http_dummy_task1 = SimpleHttpOperator(
+        task_id=&#39;http_dummy_task1&#39;,
+        method=&#39;GET&#39;,
+        endpoint=&#39;/airflow/dummy-task1&#39;,
+        http_conn_id=&#39;localhost&#39;,
+    )
+
+    http_dummy_task2 = SimpleHttpOperator(
+        task_id=&#39;http_dummy_task2&#39;,
+        method=&#39;GET&#39;,
+        endpoint=&#39;/airflow/dummy-task2&#39;,
+        http_conn_id=&#39;localhost&#39;,
+    )
+
+    http_dummy_task3 = SimpleHttpOperator(
+        task_id=&#39;http_dummy_task3&#39;,
+        method=&#39;GET&#39;,
+        endpoint=&#39;/airflow/dummy-task3&#39;,
+        http_conn_id=&#39;localhost&#39;,
+    )
+
+    complete_task = PythonOperator(
+        task_id=&#39;complete_task&#39;,
+        python_callable=complete,
+        trigger_rule=TriggerRule.ONE_SUCCESS
+    )
+
+    base_task &gt;&gt; branch_task &gt;&gt; [http_dummy_task1, http_dummy_task2, http_dummy_task3] &gt;&gt; complete_task
+
+</code></pre>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
