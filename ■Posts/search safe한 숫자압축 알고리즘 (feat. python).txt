@@ -1,0 +1,86 @@
+<h4 >search safe한 숫자압축 알고리즘 (feat. python)</h4>
+<p>이런 일이 있었다. 어떤 자료에서 해석한 특정 값을 elasticsearch에 저장하고 그것을 검색을 통해 가져와야 했는데 그 특정 값은 길이가 300자가 넘어가는 숫자였다. 그래서 fuzzy나 more_like_this등을 통해 검색을 구현하려 했으나 길이가 워낙 길어서인지 검색이 잘 되지 않았다. 어차피 이 값을 다시 쓰지 않고 그저 검색용도로만 쓸거라면 압축해서 저장하는 게 훨씬 낫겠다는 생각이 들었다.</p>
+<p>&nbsp;</p>
+<p>그냥 간단하게 0부터 9까지는 냅두고 ASCII를 이용해 10부터 이어지는 숫자들을 알파벳이나 다른 숫자들을 이용해 압축하는 느낌으로 접근했는데 구글이나 네이버같이 검색엔진을 써본 사람들은 알겠지만 검색엔진에서는 특수하게 처리하는 문자들(&quot;, 스페이스, &#39;, 등등)이 있어서 그것들을 제외하여 search safe한 압축 알고리즘을 만들어보았다. </p>
+<pre class="line-numbers"><code class='language-python' lang='python'>import random
+
+
+chars = &#39;abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_&#39;
+decoder = {}
+encoder = {}
+number = 10
+for char in chars:
+    str_number = str(number)
+    decoder[char] = str_number
+    encoder[str_number] = char
+    number += 1
+
+
+def create_random_number_string(length: int):
+    return &#39;&#39;.join(str(random.randrange(0, 10)) for _ in range(length))
+
+
+def compress(number_string: str):
+    for number in encoder:
+        number_string = number_string.replace(number, encoder[number])
+    return number_string
+
+
+def extract(compressed: str):
+    for char in decoder:
+        compressed = compressed.replace(char, decoder[char])
+    return compressed
+
+
+for _ in range(5):
+    random_length = random.randrange(150, 200)
+    test_number_string = create_random_number_string(random_length)
+    compressed = compress(test_number_string)
+    extracted = extract(compressed)
+    compressed_rate = ((len(test_number_string) - len(compressed)) / len(test_number_string))
+    print(len(test_number_string), &#39;:&#39;, test_number_string)
+    print(len(compressed), &#39;:&#39;, compressed)
+    print(len(extracted), &#39;:&#39;, extracted)
+    print(&#39;%0.2f%s&#39; % (compressed_rate * 100, &#39;%&#39;))
+    print(&quot;=======================================&quot;)
+    print()
+
+
+</code></pre>
+<p>대충 이렇게 test case를 다섯개 돌려보면</p>
+<pre><code class='language-text' lang='text'>173 : 38217891529214746234295363014799197479060934296524329944079434354710188378778646041457672365438358060229029172126710046843892063571710775285494291604692579406512763592800742
+118 : C2h89ft2e7Kn4t5Aue799j7L90Y9yt65o3t94E794yzLai8B87786K04eV67n6SCz80Ym90th2c67a0K84C9k6z7ha775s5N4tg0K9p79E65c76z9s007G
+173 : 38217891529214746234295363014799197479060934296524329944079434354710188378778646041457672365438358060229029172126710046843892063571710775285494291604692579406512763592800742
+31.79%
+=======================================
+
+175 : 7639716822342277816032528043792097211529552642763043314807290564221988329254460181232184798255115898904013545953569374090168012001578589355676046306782315697282643001276497663
+119 : 76D7g8mym778g03ps04B9k972b5tTq4r6u4xe807t0U4mj883tpIYicwiL98p5bW9890Ed5J95z69BE90g80c00f78W9zU7YKu678nf697sq4u0c76N7663
+175 : 7639716822342277816032528043792097211529552642763043314807290564221988329254460181232184798255115898904013545953569374090168012001578589355676046306782315697282643001276497663
+32.00%
+=======================================
+
+169 : 7493139163694318425430833685052034163810084088304567519918460284909110852590873676525955716306253186813604736222677625163963843917395318561832048231972429826794656963474
+110 : 7N3d9gA9Hi4p4u8x68O5kygCa08E88uJ675j9iK0sN091a85p9087A765p9T7gu6p3i68dYLAmq776pgD6C4DhDRiUi3kMnj7ot8q79KU96y74
+169 : 7493139163694318425430833685052034163810084088304567519918460284909110852590873676525955716306253186813604736222677625163963843917395318561832048231972429826794656963474
+34.91%
+=======================================
+
+164 : 12026339925028632674921994888837232115038090276115065754862563107795134822572088600680031246095798421381627915938027997533115145310302719886551641616281934706968564
+111 : c0qx99p0s63q7N2j9M888Bn2bOC090r6bO6V5M6p63a7795dMmVk88Y068003cK09V98Gd8gr9f9C0r9975xb5eRaurj886Tg4ggsjy706968U4
+164 : 12026339925028632674921994888837232115038090276115065754862563107795134822572088600680031246095798421381627915938027997533115145310302719886551641616281934706968564
+32.32%
+=======================================
+
+176 : 73946801840514332235134053456152477400743521396323428813867397457955677468949406618792480382695298743841357684557186163646921605264305170043119348188501288987043495676184196146
+121 : 7DK80iE5exmzdE5yUfo77E074z2d963n4s8d867D7J79T677K89NE66i79o80Cq95t874C4dV68JVi6gAK92g05q4u5h00Hb9y8i8Oc8898704y9U76i4j6e6
+176 : 73946801840514332235134053456152477400743521396323428813867397457955677468949406618792480382695298743841357684557186163646921605264305170043119348188501288987043495676184196146
+31.25%
+=======================================
+</code></pre>
+<p>평균 30%가 약간 넘는 압축률을 확인해볼 수 있다.</p>
+<p>&nbsp;</p>
+<p><img src="/Users/gyu/Library/Application Support/typora-user-images/image-20220521113252186.png" referrerpolicy="no-referrer" alt="image-20220521113252186"></p>
+<p>10000개의 테스트케이스에서 평균 32.35%의 압축률을 보였으니 어느정도 쓸만한 것 같다.</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
