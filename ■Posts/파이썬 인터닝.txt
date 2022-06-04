@@ -1,0 +1,137 @@
+<h4 >파이썬 인터닝 (Python Interning) - 객체 재사용</h4>
+<p>파이썬 인터닝이란 만들어진 객체를 재사용하는 것을 의미한다. 파이썬을 처음 배울 때 알게 되는 내용이지만 파이썬은 oop를 지원하기 위해 모든 것들을 클래스와 객체로 관리한다. 다른 언어에서는 흔히 자료형이라고 부르는 것들도 객체이다.</p>
+<pre class="line-numbers"><code class='language-python' lang='python'>bool_ = True
+int_ = 123
+str_ = &#39;zxc&#39;
+float_ = 12.3
+list_ = [1, 2, 3]
+tuple_ = (1, 1, 1)
+set_ = {1, 2, 3}
+dict_ = {&#39;a&#39;: 1, &#39;b&#39;: 2, &#39;c&#39;: 3}
+
+print(type(bool_))
+print(type(int_))
+print(type(str_))
+print(type(float_))
+print(type(list_))
+print(type(tuple_))
+print(type(set_))
+print(type(dict_))
+
+====================================================
+
+&lt;class &#39;bool&#39;&gt;
+&lt;class &#39;int&#39;&gt;
+&lt;class &#39;str&#39;&gt;
+&lt;class &#39;float&#39;&gt;
+&lt;class &#39;list&#39;&gt;
+&lt;class &#39;tuple&#39;&gt;
+&lt;class &#39;set&#39;&gt;
+&lt;class &#39;dict&#39;&gt;
+</code></pre>
+<p>위 코드를 실행하면 이렇게 클래스 기반으로 만들어진 객체라는 걸 확인할 수 있다.<br>(class complex로 다뤄지는 복소수는 제외)</p>
+<p>&nbsp;</p>
+<p>그렇다면 인터닝이란 무엇이냐. 이미 생성된 객체를 재사용하는 것을 의미한다. 파이썬은 기본적으로 몇가지 제한된 경우에 대해 자동적으로 인터닝이 적용되나 개발자가 필요한 경우 함수를 써서 인터닝을 지정할 수가 있다.</p>
+<p>&nbsp;</p>
+<p>다음 조건에서 파이썬 인터닝이 기본적으로 적용된다.</p>
+<p>&nbsp;</p>
+<ul>
+<li>문자열: 20자 미만의 공백을 포함하지 않는 문자열</li>
+<li>정수: -5부터 256사이의 정수</li>
+
+</ul>
+<p>&nbsp;</p>
+<p>그렇다면 위 조건으로 파이썬 인터닝이 실제로 이뤄지는지 테스트해보자.</p>
+<pre class="line-numbers"><code class='language-python' lang='python'>int_a = 256
+int_b = 256
+print(id(int_a))
+print(id(int_b))
+print(id(int_a) == id(int_b))
+
+int_c = 257
+int_d = 257
+print(id(int_c))
+print(id(int_d))
+print(id(int_c) == id(int_d))
+
+====================================================
+
+4562442640
+4562442640
+True
+4563477968
+4563477968
+True
+</code></pre>
+<p>놀랍게도 전부 다 재사용된다. 파이썬 인터프리터에서 Integer class를 만들 때 참고하는 헤더파일인 <a href='https://github.com/python/cpython/blob/main/Include/internal/pycore_global_objects.h' target='_blank' class='url'>https://github.com/python/cpython/blob/main/Include/internal/pycore_global_objects.h</a> 이곳에서도 </p>
+<p>&nbsp;</p>
+<pre class="line-numbers"><code class='language-c' lang='c'>#define _PY_NSMALLPOSINTS           257
+#define _PY_NSMALLNEGINTS           5
+</code></pre>
+<p>이렇게 해당 내용이 적혀져있는데 말이다. 궁금해서 찾아보니 런타임환경에서 파이썬 스크립트를 c로 컴파일할 때 생성되는 바이트코드에서 한번 더 메모리를 최적화할 수 있는 부분을 찾아서 적용시킨다고 한다.</p>
+<p>&nbsp;</p>
+<p>문자열을 테스트해보자면</p>
+<pre class="line-numbers"><code class='language-python' lang='python'>str_a = &quot;qwertyuiopasdfghjkl&quot; # 19자
+str_b = &quot;qwertyuiopasdfghjkl&quot;
+print(id(str_a))
+print(id(str_b))
+print(id(str_a) == id(str_b))
+
+
+str_c = &quot;qwertyuiopas dfghjklml&quot;
+str_d = &quot;qwertyuiopas dfghjklml&quot;
+print(id(str_c))
+print(id(str_d))
+print(id(str_c) == id(str_d))
+
+====================================================
+
+4318665504
+4318665504
+True
+4320401648
+4320401648
+True
+</code></pre>
+<p>역시나 인터닝이 아주잘 이뤄지고 있다.</p>
+<p>&nbsp;</p>
+<p><a href='https://github.com/python/cpython/blob/main/Objects/codeobject.c' target='_blank' class='url'>https://github.com/python/cpython/blob/main/Objects/codeobject.c</a></p>
+<p>이곳에서 각 자료형에서 어떻게 인터닝이 이뤄지고 있는지 확인할 수 있다.</p>
+<p>&nbsp;</p>
+<p>자, 그러면 임의로 인터닝을 사용하려면 어떻게 해야할까. 컴파일시점에서 같은 자료라는 걸 확인할 수 없는 코드를 만든 다음에 인터닝으로 해당 자료를 묶은 다음에 그 자료형과 똑같은 자료를 입력시켜보면 된다.</p>
+<pre class="line-numbers"><code class='language-python' lang='python'>joined_abc = &#39;&#39;.join([&#39;a&#39;, &#39;b&#39;, &#39;c&#39;])
+abc = &#39;abc&#39;
+
+print(id(joined_abc))
+print(id(abc))
+print(id(joined_abc) == id(abc))
+
+====================================================
+
+4406814256
+4405009776
+False
+</code></pre>
+<p>이렇게 결과는 똑같지만 메모리주소를 다르게 쓰는 자료에 대해서 intern함수로 감싸주면 된다.</p>
+<pre class="line-numbers"><code class='language-python' lang='python'>from sys import intern
+
+joined_abc = intern(&#39;&#39;.join([&#39;a&#39;, &#39;b&#39;, &#39;c&#39;]))
+abc = &#39;abc&#39;
+
+print(id(joined_abc))
+print(id(abc))
+print(id(joined_abc) == id(abc))
+
+====================================================
+
+4410146160
+4410146160
+True
+</code></pre>
+<p>인터닝이 이뤄지는 걸 확인할 수 있다.</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>요즘은 워낙에 리소스가 널널해서 파이썬 코드로 인해 메모리가 터지는 일은 정말 웬만해서는 없겠지만 메모리부분을 최적해야하는 상황이 온다면 충분히 고려해볼만한 옵션일 것이다.</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
