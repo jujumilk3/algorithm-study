@@ -1,0 +1,104 @@
+<h4 >클로저(closure)란 무엇인가 (clojure 아님. Feat. Python)</h4>
+<p>closure의 사전적인 정의는 이렇다.</p>
+<p><img src="/Users/gyu/Library/Application Support/typora-user-images/image-20220611195242510.png" referrerpolicy="no-referrer" alt="image-20220611195242510"></p>
+<p>프로그래밍에서 사용하는 closure란 1번과 2번, 폐쇄라는 의미를 차용하기 위해 부여한 이름으로 보인다.</p>
+<p>&nbsp;</p>
+<p>그렇다면 프로그래밍에서의 closure란 무슨 의미일까.</p>
+<blockquote><p>&quot;중첩된 함수에서 내부 함수가 정의될 때 스코프가 변수를 저장해두어 내부 함수의 변수를 나중에 사용할 수 있도록 하는 것&quot;</p>
+</blockquote>
+<p>을 의미한다. 무슨 말인지 쉽게 와닿진 않는다. 개발자들에게 익숙한 코드로 살펴보자.</p>
+<p>&nbsp;</p>
+<p>우리가 흔하게 볼 수 있는 함수는 이러한 모양이다.</p>
+<pre class="line-numbers"><code class='language-python' lang='python'>def hello(name):
+    inner_var = name
+    print(&quot;Hello &quot; + inner_var)
+
+
+hello(&quot;World&quot;)
+
+============================================================
+
+Hello World
+</code></pre>
+<p>함수가 끝나면 함수 안에 정의돼있단 inner_var에 대한 값 할당은 해제된다.</p>
+<p>&nbsp;</p>
+<p>보다 직관적으로 이해하기 위해</p>
+<pre class="line-numbers"><code class='language-python' lang='python'>inner_var = &quot;original&quot;
+
+
+def hello(name):
+    inner_var = name
+    print(&quot;Hello &quot; + inner_var)
+
+
+hello(&quot;World&quot;)
+print(inner_var)
+
+============================================================
+
+Hello World
+original
+</code></pre>
+<p>이런식으로 확인해볼 수 있을 것이다. 결론적으로 말하자면 우리가 상식적으로 이해하고 있는 함수 내부의 변수란 함수가 끝나면 해제되는 임시적인 공간이라는 점이다. (사실 모든 변수가 임시공간이다)</p>
+<p>&nbsp;</p>
+<p>하지만 이런 우리들의 상식을 바꾸는 게 바로 closure라는 개념이다.</p>
+<pre class="line-numbers"><code class='language-python' lang='python'>def closure(name):
+    def closure_hello():
+        hello_name = name
+        print(&quot;Hello &quot; + hello_name)
+    return closure_hello
+
+
+this_is_closure = closure(&quot;World&quot;)
+this_is_closure()
+
+============================================================
+
+Hello World
+</code></pre>
+<p><code class="inline">closure_hello</code>라는 함수는 <code class="inline">closure</code>라는 함수 내부에서 종료되었다. 하지만 함수 내부에 정의됐던 <code class="inline">hello_name</code>이라는 변수에 할당된 <code class="inline">&quot;World&quot;</code>라는 값은 그대로 살아있다. 이것이 클로저이다. 맨 처음에 사전적인 의미처럼 내부 함수를 외부 함수로 폐쇄시켜서 그 상태를 저장시킨 것이다.</p>
+<p>&nbsp;</p>
+<p>이걸 어따 쓰냐. 위에서 closure의 의미를 설명했을 때 말했던 것처럼 &quot;함수가 상태를 유지해야할 때&quot; 필요하다. 특히 함수형 언어들은 거의 모든 것들이 함수로 존재하는데 함수란 말 그대로 function, 기능을 의미하므로 상태 저장과는 무관하다. 우리에게 익숙한 OOP의 class가 없다고 생각하면 된다. (OOP와 FP 둘 다 할 수 있게 만든 scala에는 class가 있다.) class가 없으니 object도 없는데 함수에 특정한 상태를 저장하기 위해 closure를 활용하는 것이다. 단순히 바로 위에 쓴 예제를 활용해보면</p>
+<pre class="line-numbers"><code class='language-python' lang='python'>def closure(name):
+    def closure_hello():
+        hello_name = name
+        print(&quot;Hello &quot; + hello_name)
+    return closure_hello
+
+
+hello_world = closure(&quot;World&quot;)
+hello_world()
+print()
+hello_damon = closure(&quot;Damon&quot;)
+hello_world()
+hello_damon()
+print()
+hello_gyudoza = closure(&quot;gyudoza&quot;)
+hello_world()
+hello_damon()
+hello_gyudoza()
+
+============================================================
+
+Hello World
+
+Hello World
+Hello Damon
+
+Hello World
+Hello Damon
+Hello gyudoza
+
+
+</code></pre>
+<p><code class="inline">def closure</code>만 class로 바꾸면 OOP에서 아주 흔하게 볼 수 있는 형태가 된다.</p>
+<p>&nbsp;</p>
+<p>실제로 clojure를 만든 Rich Hickey도 이것에 착안하여 JVM위에서 돌아가는 데다가 C#의 C, Lisp의 L, Java의 j를 포함하고 싶었어가지고 Clojure라는 이름이 탄생한 것이라고 한다.</p>
+<p><img src="/Users/gyu/Library/Application Support/typora-user-images/image-20220611202914371.png" referrerpolicy="no-referrer" alt="image-20220611202914371"></p>
+<p>&nbsp;</p>
+<p>어렴풋이 알고만 있었던 closure와 clojure라는 언어의 연관성이 궁금해져서 여기저기 찾아보고 공부하다가 정리하면서 이 포스팅이 탄생했다. 거기에 국내 포스팅 중에서 closure에 대해서 검색해보면 거의 모든 포스팅이 js와 관련된 글들이어서 아쉬움을 느꼈다. js에서만 쓰이는 개념은 아닌데 아무래도 js의 일급 객체가 prototype이라는 함수인 데다가 js가 많이 쓰이다보니 js로 설명하는 예제가 많다.</p>
+<p><img src="/Users/gyu/Desktop/스크린샷 2022-06-11 오후 8.33.22.png" referrerpolicy="no-referrer" alt="스크린샷 2022-06-11 오후 8.33.22"></p>
+<p>이렇게 말이다.</p>
+<p>&nbsp;</p>
+<p>머 암튼 이번 기회에 정리하면서 closure가 무엇인지 확실하게 머릿속에 각인시켰다. 끗.</p>
+<p>&nbsp;</p>
