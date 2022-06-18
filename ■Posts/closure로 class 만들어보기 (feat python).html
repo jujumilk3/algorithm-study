@@ -1,0 +1,82 @@
+<h4 >closure로 class 만들어보기 (feat python)</h4>
+<p>예전에 이런 글을 썼었다.</p>
+<p><a href='https://this-programmer.tistory.com/510'>클로저(closure)란 무엇인가 (clojure 아님. Feat. Python)</a></p>
+<p>이 글을 쓰면서 그런 생각이 들었다. 꼭 class와 object같다.</p>
+<p>&nbsp;</p>
+<p>그래서 한번 만들어봤다.</p>
+<pre class="line-numbers"><code class='language-python' lang='python'>def closure_class(data=None):
+    if data is None:
+        data = {
+            &#39;name&#39;: &#39;&#39;
+        }
+
+    def closure():
+        def set_name(name):
+            data[&#39;name&#39;] = name
+            return data[&#39;name&#39;]
+
+        def get_name():
+            return data[&#39;name&#39;]
+
+        closure_set = lambda: ...
+        closure_set.set_name = set_name
+        closure_set.get_name = get_name
+        closure_set.print_name = lambda: print(data[&#39;name&#39;])
+        return closure_set
+
+    closure.attr = closure()
+    return closure
+
+</code></pre>
+<p>이런 모습이 된다. 원래는 closure_set으로 반환하는 곳을 dict로 구성했었는데 그러면 뭔가 class같은 느낌이 안들어서(억지) 함수에 attribute형태로 추가해서 리턴하는 형태로 구성하였다.</p>
+<p>&nbsp;</p>
+<p>아래처럼 </p>
+<pre class="line-numbers"><code class='language-python' lang='python'>def closure_class(data=None):
+    if data is None:
+        data = {
+            &#39;name&#39;: &#39;&#39;
+        }
+
+    def closure():
+        def set_name(name):
+            data[&#39;name&#39;] = name
+            return data[&#39;name&#39;]
+
+        def get_name():
+            return data[&#39;name&#39;]
+
+        closure_set = lambda: ...
+        closure_set.set_name = set_name
+        closure_set.get_name = get_name
+        closure_set.print_name = lambda: print(data[&#39;name&#39;])
+        return closure_set
+
+    closure.attr = closure()
+    return closure
+
+
+test1 = closure_class({&#39;name&#39;: &#39;damon&#39;})
+test2 = closure_class({&#39;name&#39;: &#39;jujumilk3&#39;})
+test3 = closure_class({&#39;name&#39;: &#39;gyudoza&#39;})
+print(test1.attr.get_name())
+print(test1.attr.set_name(&#39;damon_changed&#39;))
+print(test1.attr.get_name())
+test1.attr.print_name()
+print(test2.attr.get_name())
+test3.attr.print_name()
+
+
+============================================================
+
+
+damon
+damon_changed
+damon_changed
+damon_changed
+jujumilk3
+gyudoza
+</code></pre>
+<p>사용할 수 있다. 근데 그냥 class를 쓰는 게 좋다.</p>
+<p><img src="/Users/gyu/Library/Application Support/typora-user-images/image-20220618184847878.png" referrerpolicy="no-referrer" alt="image-20220618184847878"></p>
+<p>return type이 attribute나 method가 아니고 clsoure에 붙어있는 attr도 그냥 함수 자체 때려박은 멤버변수이기 때문에 IDE에서 인식하지 못한다. 그냥 예전에 closure관련 글을 쓰면서 어 이렇게 쓸 수도 있겠는데? 하는 마음에 진행해봤다.</p>
+<p>&nbsp;</p>
