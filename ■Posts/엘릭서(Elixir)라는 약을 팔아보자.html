@@ -108,7 +108,7 @@ elixir --erl &quot;+P 1000000&quot; -r chain.exs -e &quot;Chain.run(1_000_000)&q
 <p>&nbsp;</p>
 <p>&nbsp;</p>
 <p><strong>3. TCO</strong></p>
-<p>TCO. Tail Call Optimization(꼬리 재귀 최적화)의 약자이다. 보통 재귀함수는 함수 오버로드때문에 자주 사용되지 않는다. 코딩인터뷰를 볼때도 항상 재귀의 단점을 함수 오버로드라고 뭔가 교과서처럼 답변하는 게 당연하듯이 말이다.</p>
+<p>TCO. Tail Call Optimization(꼬리 재귀 최적화)의 약자이다. 보통 재귀함수는 함수 오버헤드때문에 자주 사용되지 않는다. 코딩인터뷰를 볼때도 항상 재귀의 단점을 함수 오버헤드와 스택오버플로우의 위험성이라고 뭔가 교과서처럼 답변하는 게 당연하듯이 말이다.</p>
 <p>재귀함수는 결국 마지막에 함수가 종료되기 전까진 함수를 메모리에 올려놓는다. 피보나치 수열의 n번째 숫자를 구하는 함수를 python으로 구현해보면</p>
 <pre class="line-numbers"><code class='language-python' lang='python'>def fib(n):
     if n == 0:
@@ -135,7 +135,7 @@ elixir --erl &quot;+P 1000000&quot; -r chain.exs -e &quot;Chain.run(1_000_000)&q
 <p>[##_Image|kage@clBPA7/btrFFZNxGIg/7h2ZlCcnClWoG3fDI1MQn0/img.png|alignCenter|width="100%"|_##]</p>
 <p>이렇게 n이 2일때까지는 꾸준히 함수스택이 쌓이다가 1이 되면 한번에 계산된다.</p>
 <p>&nbsp;</p>
-<p>그래서 우리는 이러한 현상을 방지하기 위해 메모이제이션같은 디자인 패턴을 사용하지만 보통 프로그래밍 언어가 순회문을 돌리기 위해 사용하는 변수 재할당(<code class="inline">for(int i=0;i&lt;10;i++)</code>)이라는 것이 함수형 프로그래밍 언어에는 없으므로 보통 패턴매칭과 재귀를 이용해 순회나 반복 기능을 구현한다. 하지만 재귀함수에는 위와 같이 함수 오버로딩이라는 치명적인 단점이 존재한다. 그것을 해결한 게 바로 꼬리재귀최적화(TCO)이다.</p>
+<p>그래서 우리는 이러한 현상을 방지하기 위해 메모이제이션같은 디자인 패턴을 사용하지만 보통 프로그래밍 언어가 순회문을 돌리기 위해 사용하는 변수 재할당(<code class="inline">for(int i=0;i&lt;10;i++)</code>)이라는 것이 함수형 프로그래밍 언어에는 없으므로 보통 패턴매칭과 재귀를 이용해 순회나 반복 기능을 구현한다. 하지만 재귀함수에는 위와 같이 함수 오버헤드라는 치명적인 단점이 존재한다. 그것을 해결한 게 바로 꼬리재귀최적화(TCO)이다.</p>
 <p>&nbsp;</p>
 <p>엘릭서는, 함수에서 마지막으로 수행하는 연산이 자기 자신으로의 호출일 때는 함수를 추가로 호출하지 않고(stack에 쌓지 않고) 그냥 런타임이 함수의 시작 부분으로 돌아간다. 재귀 호출에 인자가 있다면 기존 파라미터의 값이 새로운 인자로 대체된다. 함수에 TCO를 적용하기 위해선 단순히재귀호출이 함수의 마지막에 실행되면 된다.</p>
 <pre class="line-numbers"><code class='language-elixir' lang='elixir'>defmodule Recursive do
