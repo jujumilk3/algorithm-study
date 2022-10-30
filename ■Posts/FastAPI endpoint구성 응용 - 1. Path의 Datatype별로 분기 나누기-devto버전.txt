@@ -1,0 +1,188 @@
+---
+title: How to Divide router by Datatype in Path parameter. (FastAPI endpoint Advanced tip.)
+published: true
+description: FastAPI endpoint Advanced tip.
+tags: fastapi, python, router
+# cover_image: https://direct_url_to_image.jpg
+# Use a ratio of 100:42 for best results.
+# published_at: 2022-10-30 10:16 +0000
+---
+
+#### How to Divide router by Datatype in Path parameter. (FastAPI endpoint Advanced tip.)
+
+As known as well, FastAPI is almost a framework made of Pydantic and Starlette. So, If these provide something, FastAPI does too. And there's a part that's not in the FastAPI document, but only in Starlette. One of them is the part of endpoint that devided by Pathd's DataType.
+
+
+
+```python
+from fastapi import FastAPI
+
+app = FastAPI()
+
+
+@app.get("/items/{item_id}")
+async def read_item_by_id(
+    item_id: int,
+):
+    return {"item_id": item_id}
+
+
+@app.get("/items/{item_name}")
+async def read_item_by_name(
+    item_name: str,
+):
+    return {"item_name": item_name}
+
+```
+
+There is a router configured like this.
+
+When you view an automatically created document,
+
+![Image description](https://dev-to-uploads.s3.amazonaws.com/uploads/articles/dfmrz6s9mti3oo31gtfz.png)
+
+It looks like this. If you put int in `{item_id}`, the router above will run, and if you put string in `{item_name}`, the router below will run.
+
+
+![Image description](https://dev-to-uploads.s3.amazonaws.com/uploads/articles/pxjl2wyasxj4avu06s6p.png)
+
+
+It works when you input int type but,
+
+
+![Image description](https://dev-to-uploads.s3.amazonaws.com/uploads/articles/3d1v5xk3upv61ibcikoa.png)
+
+
+
+But it makes a problem when you input string at `item_name`. As you can see at the error message, It is said that an error occurred because the value entered in item_id was not an integer, but it can be seen that the endpoint intended by the user is not operated.
+
+```python
+from fastapi import FastAPI, Path
+
+app = FastAPI()
+
+
+@app.get("/items/{item_id}")
+async def read_item_by_id(
+    item_id: int = Path(0, description="The ID of the item to get"),
+):
+    return {"item_id": item_id}
+
+
+@app.get("/items/{item_name}")
+async def read_item_by_name(
+    item_name: str = Path("", description="The name of the item to get"),
+):
+    return {"item_name": item_name}
+
+```
+
+Even if you initialize the default data with the Path type parameter provided by FastAPI,
+
+
+![Image description](https://dev-to-uploads.s3.amazonaws.com/uploads/articles/fvd5nxuvus812qi9n6jt.png)
+
+
+
+Inside, it can be seen that the above function (`read_item_by_id`) that still receives the item_id is executed.
+
+
+
+As you can guess, when the FastAPI app runs, the endpoints are sorted inside, and the functions above are higher in priority, so if you write multiple functions on the same endpoint, the function at the top is executed. You can test this simply, too
+
+```python
+from fastapi import FastAPI
+
+app = FastAPI()
+
+
+@app.get("/hello")
+async def hello1(
+):
+    return {"hello": "world1"}
+
+
+@app.get("/hello")
+async def hello2(
+):
+    return {"hello": "world2"}
+
+```
+
+If you configure two endpoints with the same name,
+
+
+![Image description](https://dev-to-uploads.s3.amazonaws.com/uploads/articles/p7fs1xzyc1zllp64ykt1.png)
+
+
+
+The function name appears to be Hello2 and it's like a function that you declared later has priority
+
+
+![Image description](https://dev-to-uploads.s3.amazonaws.com/uploads/articles/d6b2kg34wabtdtw9wg6h.png)
+
+
+
+If you actually execute it, you will see that the 'hello1' function declared above has been executed.
+
+
+
+Now that we know the cause, how do we solve this? It's simple.
+In the part where route specifies the path parameter, you can specify the data_type.
+
+```python
+from fastapi import FastAPI
+
+app = FastAPI()
+
+
+@app.get("/items/{item_id:int}")
+async def read_item_by_id(
+    item_id: int,
+):
+    print("worked with item_id")
+    return {"item_id": item_id}
+
+
+@app.get("/items/{item_name:str}")
+async def read_item_by_name(
+    item_name: str,
+):
+    print("worked with item_name")
+    return {"item_name": item_name}
+
+```
+
+Like this. When you run the router configured in this way, you can see that it works as intended.
+
+
+![Image description](https://dev-to-uploads.s3.amazonaws.com/uploads/articles/9jakwyljpapxpotxktdn.png)
+
+![Image description](https://dev-to-uploads.s3.amazonaws.com/uploads/articles/9z99cxjb4l97l8vyajxl.png)
+
+
+
+
+If you insert an int, it works as an int router
+
+
+
+
+
+![Image description](https://dev-to-uploads.s3.amazonaws.com/uploads/articles/2g9zfqnte6tk96fhj9df.png)
+
+![Image description](https://dev-to-uploads.s3.amazonaws.com/uploads/articles/r5ht6omvoy4sb3d78xon.png)
+
+
+
+
+If you insert a string, it works as a string.
+
+
+
+And this way of working with endpoints is not in FastAPI Tutorial. It is in Starlette's. https://www.starlette.io/routing/ You can check it out by referring to this part.
+
+
+
+So in the end, in order to make good user of FastAPI, you need to know Pydantic and Starlette, and +@ SqlAlchemy.
+
