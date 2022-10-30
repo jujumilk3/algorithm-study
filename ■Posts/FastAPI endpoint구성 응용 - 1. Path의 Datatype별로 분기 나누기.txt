@@ -1,0 +1,118 @@
+<h4>FastAPI endpoint구성 응용 - 1. Path의 Datatype별로 분기 나누기</h4>
+<p>이미 누군가가 포스팅해놨으면 안쓰려고 했는데 아쉽게도 하나도 발견하질 못해서 내가 직접 작성한다. 영어로도 이부분에 대해서 포스팅을 해둔 사람이 없고 심지어는 FastAPI 공식 튜토리얼에도 누락된 부분이라 나중에 기회가 된다면 직접 작성해넣을 예정이다.</p>
+<p>&nbsp;</p>
+<p>알만한 사람들은 다 아는 사실이지만 FastAPI는 거의 Pydantic과 Starlette으로 만들어진 프레임워크이다. 그래서 여기에서 제공하는 기능들은 거진 제공한다고 생각하면 된다. 그리고 거기엔 FastAPI 문서에는 없지만 Starlette에만 적혀있는 부분이있다. 그중 하나가 endpoint에서 Pathd의 DataType별로 분기를 치는 부분이다.</p>
+<p>&nbsp;</p>
+<pre class="line-numbers"><code class='language-python' lang='python'>from fastapi import FastAPI
+
+app = FastAPI()
+
+
+@app.get(&quot;/items/{item_id}&quot;)
+async def read_item_by_id(
+    item_id: int,
+):
+    return {&quot;item_id&quot;: item_id}
+
+
+@app.get(&quot;/items/{item_name}&quot;)
+async def read_item_by_name(
+    item_name: str,
+):
+    return {&quot;item_name&quot;: item_name}
+
+</code></pre>
+<p>예를 들면 이렇게 구성된 라우터가 있다.</p>
+<p>자동으로 작성된 swagger문서를 보면</p>
+<p><img src="/Users/gyu/Library/Application Support/typora-user-images/image-20221017221752769.png" referrerpolicy="no-referrer" alt="image-20221017221752769"></p>
+<p>이렇게 생겨서 마치 <code class="inline">{item_id}</code>자리에 int를 넣으면 위의 라우터가 실행되고 <code class="inline">{item_name}</code>에 string을 넣으면 아래 라우터가 실행될 것 같지만</p>
+<p><img src="/Users/gyu/Library/Application Support/typora-user-images/image-20221017222452639.png" referrerpolicy="no-referrer" alt="image-20221017222452639"></p>
+<p>item_id를 사용할 땐 괜찮아도</p>
+<p><img src="/Users/gyu/Library/Application Support/typora-user-images/image-20221017222535948.png" referrerpolicy="no-referrer" alt="image-20221017222535948"></p>
+<p>item_name을 이용할 땐 문제가 생긴다. 에러내역을 보면 알겠지만 item_id에 들어온 value가 integer가 아니라서 오류가 발생했다는 내용인데 딱봐도 알겠지만 사용자가 의도한 엔드포인트가 작동되지 않은 것임을 알 수 있다.</p>
+<pre class="line-numbers"><code class='language-python' lang='python'>from fastapi import FastAPI, Path
+
+app = FastAPI()
+
+
+@app.get(&quot;/items/{item_id}&quot;)
+async def read_item_by_id(
+    item_id: int = Path(0, description=&quot;The ID of the item to get&quot;),
+):
+    return {&quot;item_id&quot;: item_id}
+
+
+@app.get(&quot;/items/{item_name}&quot;)
+async def read_item_by_name(
+    item_name: str = Path(&quot;&quot;, description=&quot;The name of the item to get&quot;),
+):
+    return {&quot;item_name&quot;: item_name}
+
+</code></pre>
+<p>이렇게 FastAPI에서 제공하는 Path타입 패러미터로 default data를 초기화시켜줘도</p>
+<p><img src="/Users/gyu/Library/Application Support/typora-user-images/image-20221017223010956.png" referrerpolicy="no-referrer" alt="image-20221017223010956"></p>
+<p>내부에서는 여전히 item_id를 받는 위의 함수(<code class="inline">read_item_by_id</code>)가 실행되는 것을 알 수 있다.</p>
+<p>&nbsp;</p>
+<p>원인은 짐작하다시피 FastAPI앱이 실행되면 엔드포인트가 내부에서 정렬이되는데 위에 있는 함수일수록 우선순위가 높기 때문에 같은 엔드포인트에 여러 개의 함수를 작성하면 맨 위에 있는 함수가 실행된다. 이것 또한 단순하게 테스트해볼 수 있는데</p>
+<pre class="line-numbers"><code class='language-python' lang='python'>from fastapi import FastAPI
+
+app = FastAPI()
+
+
+@app.get(&quot;/hello&quot;)
+async def hello1(
+):
+    return {&quot;hello&quot;: &quot;world1&quot;}
+
+
+@app.get(&quot;/hello&quot;)
+async def hello2(
+):
+    return {&quot;hello&quot;: &quot;world2&quot;}
+
+</code></pre>
+<p>이렇게 똑같은 이름의 엔드포인트를 2개 구성하면</p>
+<p><img src="/Users/gyu/Library/Application Support/typora-user-images/image-20221017225200241.png" referrerpolicy="no-referrer" alt="image-20221017225200241"></p>
+<p>함수 이름은 Hello2로 떠서 마치 나중에 선언한 함수가 우선순위를 갖는 것 같지만</p>
+<p><img src="/Users/gyu/Library/Application Support/typora-user-images/image-20221017225411308.png" referrerpolicy="no-referrer" alt="image-20221017225411308"></p>
+<p>막상 실행을 해보면 위에 선언한 <code class="inline">hello1</code>함수가 실행된 걸 확인해볼 수 있을 것이다.</p>
+<p>&nbsp;</p>
+<p>그럼 원인은 알았으니 이걸 어떻게 해결할까? 간단하다.
+route에서 path parameter를 지정하는 부분에서 data_type을 명시해주면 된다.</p>
+<pre class="line-numbers"><code class='language-python' lang='python'>from fastapi import FastAPI
+
+app = FastAPI()
+
+
+@app.get(&quot;/items/{item_id:int}&quot;)
+async def read_item_by_id(
+    item_id: int,
+):
+    print(&quot;worked with item_id&quot;)
+    return {&quot;item_id&quot;: item_id}
+
+
+@app.get(&quot;/items/{item_name:str}&quot;)
+async def read_item_by_name(
+    item_name: str,
+):
+    print(&quot;worked with item_name&quot;)
+    return {&quot;item_name&quot;: item_name}
+
+</code></pre>
+<p>이렇게 말이다. 이렇게 구성한 라우터를 실행해도면 의도대로 잘 동작하는 걸 확인해볼 수 있다.</p>
+<p><img src="/Users/gyu/Library/Application Support/typora-user-images/image-20221017230146478.png" referrerpolicy="no-referrer" alt="image-20221017230146478"></p>
+<p><img src="/Users/gyu/Library/Application Support/typora-user-images/image-20221017230211135.png" referrerpolicy="no-referrer" alt="image-20221017230211135"></p>
+<p>int를 넣으면 int router로 작동하고,</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p><img src="/Users/gyu/Library/Application Support/typora-user-images/image-20221017230233103.png" referrerpolicy="no-referrer" alt="image-20221017230233103"></p>
+<p><img src="/Users/gyu/Library/Application Support/typora-user-images/image-20221017230249954.png" referrerpolicy="no-referrer" alt="image-20221017230249954"></p>
+<p>문자열을 넣으면 string으로 작동한다.</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>그리고 이런 엔드포인트 작동방식은 FastAPI Tutorial에 없다. Starlette의 Tutorial에 있다. <a href='https://www.starlette.io/routing/' target='_blank' class='url'>https://www.starlette.io/routing/</a> 이부분을 참조하면 확인할 수 있다.</p>
+<p>&nbsp;</p>
+<p>그러니까 결국 FastAPI를 제대로 쓰기 위해선 Pydantic과 Starlette, +@로 SqlAlchemy를 알아야 한다...는 생각이 들었다.</p>
+<p>다음편은 계층형(Hierarchy) 엔드포인트를 구성할 때 마주치는 문제, 예를 들어 <code class="inline">post/{post_id}</code>를 하면 포스트의 개요가 보이고 <code class="inline">post/{post_id}/detail</code>를 조회하면 post의 디테일한 정보를 조회하는 형태의 엔드포인트를 구성하고 싶을 때 <code class="inline">post/{post_id}/detail</code>를 조회하면 엔드포인트 주소가 위에서 먹혀서 실행되지 않는 현상을 해결해볼 것이다.</p>
+<p>&nbsp;</p>
