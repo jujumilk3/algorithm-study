@@ -1,0 +1,85 @@
+<h4>sqlite memdb의 맹점 (※: 테스트할 때 주의할 점)</h4>
+<p>현재 사내의 거의 모든 프로젝트가 fastAPI + TDD 기반으로 만들어지고 있는데 테스트를 돌릴 때는 빠른 테스트 실행을 위해서 sqlite의 memdb를 이용하고 있다. 하지만 실제 실행환경과 pytest라는 커맨드를 이용한 테스트 환경에 조금 다른 점이 존재해서 개발 도중에 sync DB에서 사용하는 주소 <code class="inline">sqlite:///:memory:</code>와 <code class="inline">sqlite+aiosqlite:///:memory:</code>두 개를 모두 사용을 했는데 이상하게 한쪽에서 만든 table을 다른 테이블에서 조회하지 못해서 실험으로 로컬에서 실행할 때는 파일기반의 주소로 바꾸고, 테스트를 돌릴 때는 다시 메모리 db 주소로 바꿔서 진행하는 어이없는 짓을 잠깐 했었다.</p>
+<p>상식적으로 aiosqlite를 prefix를 붙였다고 저 두 개가 다른 db가 될 것이라는 생각을 못했기 때문인데 아니었다. 애초에 다른 prefix를 붙였기 때문이 아닌, sqlite memdb는 sqlalchemy와 쓸 때 cereate_engine이라는 함수를 쓸 때마다 다른 db를 생성하고 있었기 때문에 sync engine에서 만든 db를 async engine에서 찾고 있지 못하는 것이었다.</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>예제 코드는 아래와 같다.</p>
+<pre class="line-numbers"><code class='language-python' lang='python'>from sqlalchemy import create_engine, inspect
+
+ddl = &quot;&quot;&quot;
+CREATE TABLE IF NOT EXISTS users (
+    id INTEGER PRIMARY KEY,
+    name VARCHAR(50),
+    address VARCHAR(50)
+);
+&quot;&quot;&quot;
+
+ddl2 = &quot;&quot;&quot;
+CREATE TABLE IF NOT EXISTS users2 (
+    id INTEGER PRIMARY KEY,
+    name VARCHAR(50),
+    address VARCHAR(50)
+);
+&quot;&quot;&quot;
+
+sync_mem_sqlite1 = create_engine(&quot;sqlite:///:memory:&quot;)
+sync_mem_sqlite2 = create_engine(&quot;sqlite:///:memory:&quot;)
+
+
+# create table only sqlite1
+with sync_mem_sqlite1.connect() as conn:
+    conn.execute(ddl)
+
+with sync_mem_sqlite2.connect() as conn:
+    conn.execute(ddl2)
+
+print(inspect(sync_mem_sqlite1).get_table_names())
+print(inspect(sync_mem_sqlite2).get_table_names())
+
+=======================================================================
+실행결과
+[&#39;users&#39;]  # sync_mem_sqlite1이 갖고 있는 table
+[&#39;users2&#39;]  # sync_mem_sqlite2이 갖고 있는 table
+</code></pre>
+<p>서로 완전히 다른 데이터베이스인 것을 확인할 수 있다. 만약에 memdb가 아닌 file로 쓰면</p>
+<pre class="line-numbers"><code class='language-python' lang='python'>from sqlalchemy import create_engine, inspect
+
+ddl = &quot;&quot;&quot;
+CREATE TABLE IF NOT EXISTS users (
+    id INTEGER PRIMARY KEY,
+    name VARCHAR(50),
+    address VARCHAR(50)
+);
+&quot;&quot;&quot;
+
+ddl2 = &quot;&quot;&quot;
+CREATE TABLE IF NOT EXISTS users2 (
+    id INTEGER PRIMARY KEY,
+    name VARCHAR(50),
+    address VARCHAR(50)
+);
+&quot;&quot;&quot;
+
+sync_mem_sqlite1 = create_engine(&quot;sqlite:///./test.db&quot;)
+sync_mem_sqlite2 = create_engine(&quot;sqlite:///./test.db&quot;)
+
+
+# create table only sqlite1
+with sync_mem_sqlite1.connect() as conn:
+    conn.execute(ddl)
+
+with sync_mem_sqlite2.connect() as conn:
+    conn.execute(ddl2)
+
+print(inspect(sync_mem_sqlite1).get_table_names())
+print(inspect(sync_mem_sqlite2).get_table_names())
+
+=======================================================================
+실행결과
+[&#39;users&#39;, &#39;users2&#39;]  # sync_mem_sqlite1이 갖고 있는 table
+[&#39;users&#39;, &#39;users2&#39;]  # sync_mem_sqlite2이 갖고 있는 table
+</code></pre>
+<p>당연하게도 두 디비가 같은 것을 확인해볼 수 있다.</p>
+<p>&nbsp;</p>
+<p>하루에도 수십번의 테스트를 돌리기 때문에 메모리 디비를 사용하고 있기는 한데 혹시라도 이런부분에 이슈가 생긴다면 파일기반의 sqlite로 진행하는 것도 고려해볼 수 있겠다.</p>
+<p>&nbsp;</p>
