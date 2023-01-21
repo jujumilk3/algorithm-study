@@ -1,0 +1,80 @@
+<h4>k8s kind cluster 만들 때 SAN 설정하기 (kind cluster에 외부 접속 허용하기)</h4>
+<p>로컬에서 간단하게 k8s환경을 구성해서 테스트해볼 때 주로 사용하는 minikube와 비슷한 역할을 하는게 kind이다. 솔직히 말해서 둘의 차이점은 잘 모르겠다. 그래서 ChatGPT쨩에게 물어봤다.</p>
+<p>&nbsp;</p>
+<pre class="line-numbers"><code class='language-text'>Q: What is major differences between minikube and kind?
+
+A: Minikube and Kind (Kubernetes in Docker) are both tools used to run Kubernetes clusters locally.
+The main difference between the two is that Minikube runs a single-node Kubernetes cluster inside
+a virtual machine (using VirtualBox, HyperKit, etc.) on your local machine, while Kind runs a multi-node
+Kubernetes cluster using Docker containers. Kind is also more lightweight and simpler to set up and
+use than Minikube. Additionally, Kind provides a way to test Kubernetes features and upgrades in an isolated environment.
+</code></pre>
+<p>&nbsp;</p>
+<pre class="line-numbers"><code class='language-text'>Q: 한글로 번역해줘
+
+A: Minikube와 Kind는 모두 로컬에서 Kubernetes 클러스터를 실행하는 도구입니다. 두 가지 사이의 주요 차이점은 Minikube가
+로컬 머신의 가상 머신(VirtualBox, HyperKit 등 사용) 내에서 단일 노드 Kubernetes 클러스터를 실행하는 반면,
+Kind는 Docker 컨테이너를 사용하여 다중 노드 Kubernetes 클러스터를 실행합니다. Kind는 또한 Minikube보다 가볍고 설치 및 사용이 단순합니다.
+Kind는 또한 격리된 환경에서 Kubernetes 기능 및 업그레이드를 테스트할 수 있는 방법을 제공합니다.
+</code></pre>
+<p>&nbsp;</p>
+<p>라고한다. 생각해보니 minikube는 하나의 클러스터만 설치할 수 있었던 것 같고(노드는 여러 개 설정 가능하지만) kind는 클러스터 자체도 여러개 설정 가능했던 것으로 기억한다. ChatGPT로 기억살리기. 굳이다.</p>
+<p>&nbsp;</p>
+<p>아, 참고로 kind의 공식사이트는 <a href='https://kind.sigs.k8s.io/' target='_blank' class='url'>https://kind.sigs.k8s.io/</a> 이곳이다.</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>뭐 아무튼 이 kind cluster를 만들고나서 외부에서 접속하기 위해선 SAN설정이 필요하다. SAN이란 무엇인가. Subject Alternative Name이라고 하는데 클러스터를 생성할 때 생기는 apiserver 인증서에 등록되는 허가받은 주소라고 간단하게 표현할 수 있다. 여기에서 말하는 apiserver는 kind로 생성된 k8s cluster 그 자체의 apiserver 주소를 의미한다.</p>
+<p>&nbsp;간단한 예를 들어서 <code class="inline">kind create cluster --name kind-test</code>라는 명령어를 통해 <code class="inline">kind-kind-test</code>라는 클러스터가 만들어지면 모든 설정이 기본적값으로 생성되는데 이렇게 생성하면 apiserver의 주소가 <code class="inline">127.0.0.1:randomport</code>가 돼서 포트포워딩이나 리버스프록시 같은 다른 방법을 더하지 않으면 <code class="inline">kind-kind-test</code>에는 같은 머신에서밖에 접속할 수 없는 상태가 된다.</p>
+<p>&nbsp;</p>
+<p>다행히도 kind도 k8s manifest file처럼 yaml파일을 작성해서 특정 설정값들을 커스터마이징한 클러스터를 생성할 수 있는 방법이 있다.</p>
+<p>&nbsp;</p>
+<p><a href='https://kind.sigs.k8s.io/docs/user/quick-start/#configuring-your-kind-cluster' target='_blank' class='url'>https://kind.sigs.k8s.io/docs/user/quick-start/#configuring-your-kind-cluster</a><br/>
+<a href='https://kind.sigs.k8s.io/docs/user/configuration/' target='_blank' class='url'>https://kind.sigs.k8s.io/docs/user/configuration/</a></p>
+<p>위의 링크에 해당 방법에 대한 안내가 자세히 쓰여져있다.</p>
+<p>&nbsp;</p>
+<p>아래링크에서 제공하는 API Server sample이</p>
+<pre class="line-numbers"><code class='language-yaml' lang='yaml'>kind: Cluster
+apiVersion: kind.x-k8s.io/v1alpha4
+name: kind-test
+networking:
+  # WARNING: It is _strongly_ recommended that you keep this the default
+  # (127.0.0.1) for security reasons. However it is possible to change this.
+  apiServerAddress: &quot;127.0.0.1&quot;
+  # By default the API server listens on a random open port.
+  # You may choose a specific port but probably don&#39;t need to in most cases.
+  # Using a random port makes it easier to spin up multiple clusters.
+  apiServerPort: 6443
+</code></pre>
+<p>이렇게 작성돼있다. 이것을 바꿔서</p>
+<pre class="line-numbers"><code class='language-yaml' lang='yaml'>kind: Cluster
+apiVersion: kind.x-k8s.io/v1alpha4
+name: kind-test
+networking:
+  apiServerAddress: &quot;0.0.0.0&quot;
+  apiServerPort: 6443
+</code></pre>
+<p>이렇게 설정하여 cluster를 생성해 외부에서 접속하려고 해도 분명히</p>
+<p><code class="inline">Unable to connect to the server: x509: certificate is valid for {some ip addresses...}, 0.0.0.0, not {access tryed address}</code></p>
+<p>이런 에러가 뜰 것이다.</p>
+<p>&nbsp;</p>
+<p>위의 설명과 합쳐서 이 에러가 뜨는 이유에 대해서 말하자면, <code class="inline">kind create cluster</code> 명령어로 만든 cluster의 config에는 클러스터 api의 ip에  certification이 돼있는 것인데 (0.0.0.0으로 만들었으니 0.0.0.0에 대한 ip로) 실제 해당 kind cluster가 돌아가는 머신의 public ip는 달라서 kind cluster를 만들면서 생긴 .kube/config에서 cluster의 server주소를 다른곳에서 다운받아 머신의 주소로 변경하면 해당 주소에 대한 인증이 없기 때문에 접근이 안되는 것이다.</p>
+<p>&nbsp;그래서 kind로 만든 cluster의 SAN에다가 kind가 돌아가고 있는 머신의 public ip를 추가해줘야만 해당 ip로의 요청이 통과되어 외부에서도 접속할 수 있게 된다.</p>
+<p>&nbsp;</p>
+<p>아래와 같이 <code class="inline">config.yaml</code>을 작성하고</p>
+<pre class="line-numbers"><code class='language-yaml' lang='yaml'>kind: Cluster
+apiVersion: kind.x-k8s.io/v1alpha4
+name: kind-test
+nodes:
+- role: control-plane
+  kubeadmConfigPatches:
+  - |
+    kind: ClusterConfiguration
+    apiServer:
+      certSANs:
+      - {Machine IP}
+networking:
+  apiServerAddress: &quot;0.0.0.0&quot;
+  apiServerPort: 6443
+</code></pre>
+<p>kind cluster를 생성하면 외부에서 접속할 수 있는 kind cluster를 생성할 수 있다.</p>
+<p>&nbsp;</p>
